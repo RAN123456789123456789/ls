@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+*.md
+.vscode
+.idea
+.DS_Store
+miniprogram
+typings
+project.config.json
+project.private.config.json
+tsconfig.json
+.eslintrc.js
+

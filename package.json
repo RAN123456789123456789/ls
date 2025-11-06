@@ -1,13 +1,17 @@
 {
   "name": "miniprogram-ts-quickstart",
   "version": "1.0.0",
-  "description": "",
+  "description": "微信小程序图书借阅系统",
   "scripts": {
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "",
   "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5"
   },
   "devDependencies": {
     "miniprogram-api-typings": "^2.8.3-1"
