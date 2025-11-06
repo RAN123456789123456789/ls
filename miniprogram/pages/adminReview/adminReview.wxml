@@ -1,0 +1,166 @@
+<!--pages/adminReview/adminReview.wxml-->
+<view class="container">
+  <!-- 标签页切换 -->
+  <view class="tab-bar">
+    <view 
+      class="tab-item {{currentTab === 'pending' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="pending"
+    >
+      <text>待审核</text>
+    </view>
+    <view 
+      class="tab-item {{currentTab === 'approved' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="approved"
+    >
+      <text>已批准</text>
+    </view>
+    <view 
+      class="tab-item {{currentTab === 'borrowed' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="borrowed"
+    >
+      <text>已借出</text>
+    </view>
+    <view 
+      class="tab-item {{currentTab === 'returned' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="returned"
+    >
+      <text>已归还</text>
+    </view>
+  </view>
+
+  <!-- 申请列表 -->
+  <scroll-view 
+    class="request-list" 
+    scroll-y
+    refresher-enabled
+    refresher-triggered="{{loading}}"
+    bindrefresherrefresh="onPullDownRefresh"
+  >
+    <view wx:if="{{loading && requests.length === 0}}" class="loading">
+      <text>加载中...</text>
+    </view>
+
+    <view wx:elif="{{filteredRequests.length === 0}}" class="empty">
+      <text>暂无申请记录</text>
+    </view>
+
+    <view 
+      class="request-item" 
+      wx:for="{{filteredRequests}}" 
+      wx:key="id"
+    >
+      <view class="request-header">
+        <text class="book-name">{{item.bookName}}</text>
+        <text class="status-badge {{getStatusClass(item.status)}}">
+          {{getStatusText(item.status)}}
+        </text>
+      </view>
+
+      <view class="request-info">
+        <view class="info-row" wx:if="{{item.name}}">
+          <text class="info-label">借阅人：</text>
+          <text class="info-value">{{item.name}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.phone}}">
+          <text class="info-label">电话：</text>
+          <text class="info-value">{{item.phone}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.reason}}">
+          <text class="info-label">借阅事由：</text>
+          <text class="info-value">{{item.reason}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">申请时间：</text>
+          <text class="info-value">{{item.formattedCreatedAt || item.createdAt}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.borrowDate}}">
+          <text class="info-label">借阅日期：</text>
+          <text class="info-value">{{item.borrowDate}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.returnDate}}">
+          <text class="info-label">归还日期：</text>
+          <text class="info-value">{{item.returnDate}}</text>
+        </view>
+      </view>
+
+      <!-- 待审核状态：显示通过/拒绝按钮 -->
+      <view class="request-actions" wx:if="{{item.status === 'pending'}}">
+        <button
+          class="action-btn approve-btn"
+          bindtap="onReview"
+          data-requestid="{{item.id}}"
+          data-action="approve"
+        >
+          通过
+        </button>
+        <button 
+          class="action-btn reject-btn"
+          bindtap="onReview"
+          data-requestid="{{item.id}}"
+          data-action="reject"
+        >
+          拒绝
+        </button>
+        <button 
+          class="action-btn detail-btn"
+          bindtap="onViewDetail"
+          data-requestid="{{item.id}}"
+        >
+          详情
+        </button>
+      </view>
+
+      <!-- 已批准状态：显示确认借出按钮 -->
+      <view class="request-actions" wx:elif="{{item.status === 'approved'}}">
+        <button 
+          class="action-btn borrow-btn"
+          bindtap="confirmBorrowRecord"
+          data-id="{{item.id}}"
+        >
+          确认借出
+        </button>
+        <button 
+          class="action-btn detail-btn"
+          bindtap="onViewDetail"
+          data-requestid="{{item.id}}"
+        >
+          详情
+        </button>
+      </view>
+
+      <!-- 已借出状态：显示确认归还按钮 -->
+      <view class="request-actions" wx:elif="{{item.status === 'borrowed'}}">
+        <button 
+          class="action-btn return-btn"
+          bindtap="confirmReturnRecord"
+          data-id="{{item.id}}"
+        >
+          确认归还
+        </button>
+        <button 
+          class="action-btn detail-btn"
+          bindtap="onViewDetail"
+          data-requestid="{{item.id}}"
+        >
+          详情
+        </button>
+      </view>
+
+      <!-- 已归还或其他状态：只显示详情按钮 -->
+      <view class="request-actions" wx:else>
+        <button 
+          class="action-btn detail-btn"
+          bindtap="onViewDetail"
+          data-requestid="{{item.id}}"
+        >
+          查看详情
+        </button>
+      </view>
+    </view>
+  </scroll-view>
+</view>
+

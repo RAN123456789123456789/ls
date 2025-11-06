@@ -1,0 +1,188 @@
+<!--pages/borrowForm/borrowForm.wxml-->
+<scroll-view class="container" scroll-y>
+  <view class="form-content">
+    <!-- 授权弹窗 -->
+    <view class="auth-modal" wx:if="{{showAuthModal}}">
+      <view class="modal-mask" bindtap="closeAuthModal"></view>
+      <view class="modal-content auth-modal-content">
+        <view class="modal-header">
+          <text class="modal-title">信息授权</text>
+        </view>
+        <view class="modal-body">
+          <text class="auth-tip">为了完成借阅申请，需要您授权以下信息：</text>
+          
+          <!-- 用户信息授权 -->
+          <view class="auth-item-modal" wx:if="{{!hasUserInfo}}">
+            <text class="auth-label-modal">基本信息授权</text>
+            <button 
+              class="auth-btn-modal"
+              bindtap="getUserProfile"
+            >
+              授权获取
+            </button>
+          </view>
+          <view class="auth-item-modal auth-success" wx:else>
+            <text class="auth-label-modal">基本信息授权</text>
+            <text class="auth-status-text">✓ 已授权</text>
+          </view>
+        </view>
+        <view class="modal-footer">
+          <button class="modal-btn confirm-btn" bindtap="closeAuthModal" wx:if="{{hasUserInfo}}">完成</button>
+          <button class="modal-btn cancel-btn" bindtap="closeAuthModal" wx:else>稍后授权</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 基本信息 -->
+    <view class="form-section">
+      <text class="section-title">基本信息</text>
+      
+      <view class="form-item">
+        <text class="form-label">姓名</text>
+        <input 
+          class="form-input" 
+          placeholder="请输入姓名"
+          value="{{form.name}}"
+          bindinput="onInputChange"
+          data-field="name"
+        />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">电话（选填）</text>
+        <input 
+          class="form-input" 
+          type="number"
+          placeholder="请输入联系电话（选填）"
+          value="{{form.phone}}"
+          bindinput="onInputChange"
+          data-field="phone"
+        />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">学号/工号</text>
+        <input 
+          class="form-input" 
+          placeholder="请输入学号或工号"
+          value="{{form.studentId}}"
+          bindinput="onInputChange"
+          data-field="studentId"
+        />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">部门/院系</text>
+        <input 
+          class="form-input" 
+          placeholder="请输入部门或院系"
+          value="{{form.department}}"
+          bindinput="onInputChange"
+          data-field="department"
+        />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">邮箱</text>
+        <input 
+          class="form-input" 
+          type="text"
+          placeholder="请输入邮箱地址（选填）"
+          value="{{form.email}}"
+          bindinput="onInputChange"
+          data-field="email"
+        />
+      </view>
+    </view>
+
+    <!-- 时间信息 -->
+    <view class="form-section">
+      <text class="section-title">时间信息</text>
+      
+      <view class="form-item">
+        <text class="form-label">借阅日期</text>
+        <picker 
+          mode="date"
+          value="{{borrowDate}}"
+          bindchange="onBorrowDateChange"
+        >
+          <view class="picker">
+            <text>{{borrowDate || '请选择借阅日期'}}</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">归还日期</text>
+        <picker 
+          mode="date"
+          value="{{returnDate}}"
+          start="{{borrowDate || ''}}"
+          bindchange="onReturnDateChange"
+        >
+          <view class="picker">
+            <text>{{returnDate || '请选择归还日期'}}</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">借阅天数</text>
+        <picker 
+          mode="selector" 
+          range="{{[7, 14, 21, 30]}}"
+          value="{{form.borrowDays === 7 ? 0 : form.borrowDays === 14 ? 1 : form.borrowDays === 21 ? 2 : 3}}"
+          bindchange="onBorrowDaysChange"
+        >
+          <view class="picker">
+            <text>{{form.borrowDays}}天</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+
+    <!-- 其他信息 -->
+    <view class="form-section">
+      <text class="section-title">其他信息</text>
+      
+      <view class="form-item">
+        <text class="form-label">借阅原因</text>
+        <textarea 
+          class="form-textarea" 
+          placeholder="请输入借阅原因（选填）"
+          value="{{form.reason}}"
+          bindinput="onInputChange"
+          data-field="reason"
+          maxlength="200"
+        />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">备注</text>
+        <textarea 
+          class="form-textarea" 
+          placeholder="其他需要说明的内容（选填）"
+          value="{{form.remark}}"
+          bindinput="onInputChange"
+          data-field="remark"
+          maxlength="200"
+        />
+      </view>
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-footer">
+    <button 
+      class="submit-btn"
+      bindtap="onSubmit"
+      disabled="{{submitting}}"
+    >
+      {{submitting ? '提交中...' : '提交申请'}}
+    </button>
+  </view>
+</scroll-view>
+

@@ -1,0 +1,13 @@
+<!--components/icon/icon.wxml-->
+<image 
+  class="icon {{className}}" 
+  src="{{src}}" 
+  mode="{{mode}}"
+  style="width: {{size}}rpx; height: {{size}}rpx; {{customStyle}}"
+></image>
+
+
+
+
+
+

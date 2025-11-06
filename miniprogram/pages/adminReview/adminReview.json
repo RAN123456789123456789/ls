@@ -1,0 +1,7 @@
+{
+    "navigationBarTitleText": "借阅审核",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "enablePullDownRefresh": true,
+    "backgroundColor": "#ffffff"
+}

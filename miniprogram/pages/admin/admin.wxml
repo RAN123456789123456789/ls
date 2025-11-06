@@ -1,0 +1,42 @@
+<!--pages/admin/admin.wxml-->
+<view class="container">
+  <view class="header-section">
+    <view class="admin-icon">👨‍💼</view>
+    <text class="admin-title">管理员中心</text>
+    <text class="admin-desc">欢迎使用管理系统</text>
+  </view>
+
+  <view class="menu-section">
+    <!-- 审核管理 -->
+    <view class="menu-card" bindtap="goToReview">
+      <view class="menu-icon">📋</view>
+      <view class="menu-content">
+        <text class="menu-title">借阅审核</text>
+        <text class="menu-desc">审核借阅申请、确认借出和归还</text>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
+
+    <!-- 可以在这里添加更多管理员功能 -->
+    <!--
+    <view class="menu-card">
+      <view class="menu-icon">📊</view>
+      <view class="menu-content">
+        <text class="menu-title">数据统计</text>
+        <text class="menu-desc">查看借阅数据统计</text>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
+    -->
+  </view>
+
+  <view class="logout-section">
+    <button class="logout-btn" bindtap="handleLogout">退出登录</button>
+  </view>
+</view>
+
+
+
+
+
+

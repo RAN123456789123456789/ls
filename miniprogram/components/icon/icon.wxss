@@ -1,0 +1,11 @@
+/* components/icon/icon.wxss */
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+
+
+
+
+

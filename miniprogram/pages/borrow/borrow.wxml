@@ -1,0 +1,21 @@
+<!--borrow.wxml-->
+<view class="container">
+  <!-- 顶部功能栏 -->
+  <view class="top-bar">
+    <view class="top-bar-content">
+      <text class="page-title">借阅</text>
+      <view class="top-actions">
+        <view class="action-item" bindtap="goToSubscribe">
+          <text class="action-icon">🔔</text>
+          <text class="action-text">订阅</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="button-container">
+    <button class="borrow-btn" bindtap="handleBorrow" hover-class="borrow-btn-hover">借阅</button>
+    <button class="return-btn" bindtap="handleReturn" hover-class="return-btn-hover">归还</button>
+  </view>
+</view>
+

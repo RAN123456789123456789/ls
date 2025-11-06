@@ -1,0 +1,59 @@
+<!--pages/login/login.wxml-->
+<view class="container">
+  <view class="login-card">
+    <view class="login-header">
+      <view class="login-icon">🔐</view>
+      <text class="login-title">管理员登录</text>
+      <text class="login-desc">请输入账户密码进行登录</text>
+    </view>
+
+    <view class="form-section">
+      <!-- 用户名输入 -->
+      <view class="input-group">
+        <view class="input-label">账户</view>
+        <input
+          class="input-field"
+          type="text"
+          placeholder="请输入账户"
+          value="{{username}}"
+          bindinput="onUsernameInput"
+          maxlength="50"
+        />
+      </view>
+
+      <!-- 密码输入 -->
+      <view class="input-group">
+        <view class="input-label">密码</view>
+        <view class="password-wrapper">
+          <input
+            class="input-field"
+            type="{{showPassword ? 'text' : 'password'}}"
+            placeholder="请输入密码"
+            value="{{password}}"
+            bindinput="onPasswordInput"
+            maxlength="50"
+          />
+          <view class="password-toggle" bindtap="togglePassword">
+            <text class="toggle-icon">{{showPassword ? '👁️' : '👁️‍🗨️'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 登录按钮 -->
+      <button
+        class="login-btn"
+        bindtap="handleLogin"
+        disabled="{{loading}}"
+        loading="{{loading}}"
+      >
+        {{loading ? '登录中...' : '登录'}}
+      </button>
+    </view>
+  </view>
+</view>
+
+
+
+
+
+

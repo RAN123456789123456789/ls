@@ -1,0 +1,139 @@
+<!--pages/books/books.wxml-->
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-box" wx:if="{{showSearch}}">
+      <input 
+        class="search-input" 
+        placeholder="搜索图书名称、作者、ISBN"
+        value="{{keyword}}"
+        bindinput="onSearchInput"
+        bindconfirm="onSearchConfirm"
+      />
+      <text class="search-clear" bindtap="onClearSearch">×</text>
+    </view>
+    <view class="search-icon" wx:else bindtap="toggleSearch">
+      <text class="iconfont">🔍</text>
+    </view>
+  </view>
+
+  <!-- 标签栏 -->
+  <view class="tab-bar">
+    <view 
+      class="tab-item {{currentTab === 'borrow' ? 'active' : ''}}"
+      bindtap="onTabChange"
+      data-tab="borrow"
+    >
+      <text class="tab-text">借阅</text>
+    </view>
+    <view 
+      class="tab-item {{currentTab === 'return' ? 'active' : ''}}"
+      bindtap="onTabChange"
+      data-tab="return"
+    >
+      <text class="tab-text">还书</text>
+    </view>
+  </view>
+
+  <!-- 主要内容区域：根据选中的标签显示不同内容 -->
+  <view class="content-wrapper">
+    <!-- 借阅内容 -->
+    <view class="content-section" wx:if="{{currentTab === 'borrow'}}">
+      <scroll-view 
+        class="section-content" 
+        scroll-y
+        refresher-enabled
+        refresher-triggered="{{loading}}"
+        bindrefresherrefresh="onPullDownRefresh"
+      >
+        <view class="section-inner">
+          <view wx:if="{{loading && availableBooks.length === 0}}" class="loading">
+            <text>加载中...</text>
+          </view>
+          
+          <view wx:elif="{{availableBooks.length === 0}}" class="empty">
+            <text>暂无可借阅图书</text>
+          </view>
+
+          <view 
+            class="book-item" 
+            wx:for="{{availableBooks}}" 
+            wx:key="id"
+            bindtap="onBookTap"
+            data-bookid="{{item.id}}"
+          >
+            <image class="book-cover" src="{{item.cover || '/images/default-book.png'}}" mode="aspectFill" />
+            <view class="book-info">
+              <text class="book-name">{{item.name}}</text>
+              <text class="book-author" wx:if="{{item.author}}">作者：{{item.author}}</text>
+              <view class="book-meta">
+                <text class="book-category" wx:if="{{item.category}}">{{item.category}}</text>
+                <text class="book-count">可借：{{item.availableCount}}/{{item.totalCount}}</text>
+              </view>
+            </view>
+            <view class="book-action">
+              <text class="arrow">›</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 还书内容 -->
+    <view class="content-section" wx:elif="{{currentTab === 'return'}}">
+      <scroll-view 
+        class="section-content" 
+        scroll-y
+        refresher-enabled
+        refresher-triggered="{{loading}}"
+        bindrefresherrefresh="onPullDownRefresh"
+      >
+        <view class="section-inner">
+          <view wx:if="{{loading && borrowedRecords.length === 0}}" class="loading">
+            <text>加载中...</text>
+          </view>
+          
+          <view wx:elif="{{borrowedRecords.length === 0}}" class="empty">
+            <text>暂无借阅记录</text>
+          </view>
+
+          <view 
+            class="record-item" 
+            wx:for="{{borrowedRecords}}" 
+            wx:key="id"
+          >
+            <view class="record-header">
+              <text class="book-name">{{item.bookName}}</text>
+              <text class="days-info {{item.daysType}}">
+                {{item.daysText}}
+              </text>
+            </view>
+            
+            <view class="record-info">
+              <view class="info-row">
+                <text class="info-label">借阅日期：</text>
+                <text class="info-value">{{item.borrowDate}}</text>
+              </view>
+              <view class="info-row">
+                <text class="info-label">归还日期：</text>
+                <text class="info-value">{{item.returnDate}}</text>
+              </view>
+            </view>
+
+            <view class="record-actions">
+              <button
+                class="return-btn"
+                bindtap="onReturnBook"
+                data-recordid="{{item.id}}"
+                data-bookname="{{item.bookName}}"
+              >
+                <text class="btn-text">归还</text>
+              </button>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</view>
+

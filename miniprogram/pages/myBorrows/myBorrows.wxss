@@ -1,0 +1,209 @@
+/* pages/myBorrows/myBorrows.wxss */
+page {
+  background-color: #ffffff;
+}
+
+.container {
+  min-height: 100vh;
+  background-color: #ffffff;
+  margin: 0;
+  padding: 0;
+}
+
+.loading,
+.empty {
+  text-align: center;
+  padding: 200rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40rpx;
+}
+
+.goto-books-btn {
+  width: 240rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  background: #ffffff;
+  color: #1a1a1a;
+  border-radius: 36rpx;
+  font-size: 28rpx;
+  border: 2rpx solid #e5e5ea;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.goto-books-btn::after {
+  border: none;
+}
+
+.record-list {
+  padding: 0 30rpx 20rpx;
+  margin-top: 0;
+}
+
+.record-item {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-top: 20rpx;
+  margin-bottom: 0;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.record-item:first-child {
+  margin-top: 0;
+  border-radius: 0 0 16rpx 16rpx;
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24rpx;
+  padding-bottom: 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.book-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+  margin-right: 20rpx;
+}
+
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12rpx;
+}
+
+.status-badge {
+  font-size: 24rpx;
+  padding: 6rpx 14rpx;
+  border-radius: 16rpx;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-badge.status-pending {
+  background-color: #fff7e6;
+  color: #fa8c16;
+}
+
+.status-badge.status-approved {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.status-badge.status-rejected {
+  background-color: #fff1f0;
+  color: #ff4d4f;
+}
+
+.status-badge.status-borrowed {
+  background-color: #e6f4ff;
+  color: #1890ff;
+}
+
+.status-badge.status-returned {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.status-badge.status-completed {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+
+.days-info {
+  font-size: 26rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  font-weight: 500;
+}
+
+.days-info.normal {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.days-info.warning {
+  background-color: #fff7e6;
+  color: #fa8c16;
+}
+
+.days-info.danger {
+  background-color: #fff1f0;
+  color: #ff4d4f;
+}
+
+.record-info {
+  margin-bottom: 24rpx;
+}
+
+.info-row {
+  display: flex;
+  margin-bottom: 12rpx;
+  font-size: 26rpx;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  color: #999;
+  width: 160rpx;
+}
+
+.info-value {
+  color: #333;
+  flex: 1;
+}
+
+.record-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.return-btn {
+  width: 180rpx;
+  height: 68rpx;
+  line-height: 68rpx;
+  background: #ffffff;
+  color: #1a1a1a;
+  border-radius: 34rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  border: 2rpx solid #e5e5ea;
+  transition: all 0.3s;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.return-btn:active {
+  transform: scale(0.95);
+  background: #f9f9f9;
+}
+
+.return-btn::after {
+  border: none;
+}
+
+.returned-text {
+  font-size: 28rpx;
+  color: #52c41a;
+  font-weight: 500;
+  padding: 0 20rpx;
+}
+
+

@@ -1,0 +1,58 @@
+<!--pages/bookDetail/bookDetail.wxml-->
+<view class="container">
+  <view wx:if="{{loading}}" class="loading">
+    <text>加载中...</text>
+  </view>
+
+  <view wx:elif="{{book}}" class="book-detail">
+    <!-- 图书信息 -->
+    <view class="book-header">
+      <image class="book-cover" src="{{book.cover || '/images/default-book.png'}}" mode="aspectFill" />
+      <view class="book-info">
+        <text class="book-name">{{book.name}}</text>
+        <text class="book-author" wx:if="{{book.author}}">作者：{{book.author}}</text>
+        <text class="book-isbn" wx:if="{{book.isbn}}">ISBN：{{book.isbn}}</text>
+        <view class="book-count">
+          <text class="count-label">可借数量：</text>
+          <text class="count-value {{book.availableCount > 0 ? 'available' : 'unavailable'}}">
+            {{book.availableCount}}/{{book.totalCount}}
+          </text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 图书描述 -->
+    <view class="book-description" wx:if="{{book.description}}">
+      <text class="desc-title">简介</text>
+      <text class="desc-content">{{book.description}}</text>
+    </view>
+
+    <!-- 借阅设置 -->
+    <view class="borrow-settings">
+      <text class="settings-title">借阅天数</text>
+      <picker 
+        mode="selector" 
+        range="{{borrowDaysOptions}}" 
+        value="{{borrowDaysIndex}}"
+        bindchange="onBorrowDaysChange"
+      >
+        <view class="picker">
+          <text>{{borrowDays}}天</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 借阅按钮 -->
+    <view class="borrow-footer">
+      <button 
+        class="borrow-btn {{book.availableCount <= 0 ? 'disabled' : ''}}"
+        bindtap="onBorrow"
+        disabled="{{borrowing || book.availableCount <= 0}}"
+      >
+        <text class="btn-text">{{borrowing ? '借阅中...' : (book.availableCount > 0 ? '立即借阅' : '已借完')}}</text>
+      </button>
+    </view>
+  </view>
+</view>
+

@@ -1,0 +1,110 @@
+<!--pages/subscribe/subscribe.wxml-->
+<view class="container">
+  <view class="header">
+    <text class="title">订阅消息管理</text>
+    <text class="desc">开启订阅后，我们会及时通知您借阅和归还的相关信息</text>
+  </view>
+
+  <view class="subscribe-list">
+    <view 
+      class="subscribe-item {{item.authorized ? 'authorized' : ''}}"
+      wx:for="{{subscribeList}}"
+      wx:key="type"
+    >
+      <view class="item-header">
+        <text class="item-title">{{item.title}}</text>
+        <text class="item-status {{item.authorized ? 'authorized' : 'unauthorized'}}">
+          {{item.authorized ? '已授权' : '未授权'}}
+        </text>
+      </view>
+      <text class="item-desc">{{item.description}}</text>
+      <button 
+        class="auth-btn {{item.authorized ? 'disabled' : ''}}"
+        bindtap="onRequestSubscribe"
+        data-type="{{item.type}}"
+        disabled="{{item.authorized || loading}}"
+      >
+        <text class="btn-text">{{item.authorized ? '已授权' : '立即授权'}}</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 测试区域 -->
+  <view class="test-section">
+    <view class="test-header">
+      <text class="test-title">测试功能</text>
+      <text class="test-desc">手动触发检查归还提醒</text>
+    </view>
+    <button 
+      class="test-btn"
+      bindtap="onTestCheckReminders"
+      disabled="{{testing}}"
+    >
+      <text class="btn-text">{{testing ? '检查中...' : '测试检查提醒'}}</text>
+    </button>
+    
+    <!-- 测试结果 -->
+    <view class="test-result" wx:if="{{testResult}}">
+      <view class="result-item">
+        <text class="result-label">检查结果：</text>
+        <text class="result-value {{testResult.success ? 'success' : 'error'}}">
+          {{testResult.message}}
+        </text>
+      </view>
+      <view class="result-item">
+        <text class="result-label">总记录数：</text>
+        <text class="result-value">{{testResult.totalRecords}}</text>
+      </view>
+      <view class="result-item">
+        <text class="result-label">已检查：</text>
+        <text class="result-value">{{testResult.recordsChecked}}</text>
+      </view>
+      <view class="result-item">
+        <text class="result-label">需要提醒：</text>
+        <text class="result-value">{{testResult.remindersToSend.length}}</text>
+      </view>
+      <view class="result-item">
+        <text class="result-label">已发送：</text>
+        <text class="result-value success">{{testResult.sentCount}}</text>
+      </view>
+      
+      <!-- 提醒详情列表 -->
+      <view class="reminder-list" wx:if="{{testResult.remindersToSend.length > 0}}">
+        <text class="reminder-title">提醒详情：</text>
+        <view 
+          class="reminder-item"
+          wx:for="{{testResult.remindersToSend}}"
+          wx:key="index"
+        >
+          <view class="reminder-info">
+            <text class="reminder-book">{{item.bookName}}</text>
+            <text class="reminder-date">归还日期：{{item.returnDate}}</text>
+            <text class="reminder-days {{item.daysLeft < 0 ? 'overdue' : ''}}">
+              {{item.daysLeft < 0 ? '逾期' + (-item.daysLeft) + '天' : '还剩' + item.daysLeft + '天'}}
+            </text>
+          </view>
+          <view class="reminder-status">
+            <text class="status-tag {{item.authorized ? 'authorized' : 'unauthorized'}}">
+              {{item.authorized ? '已授权' : '未授权'}}
+            </text>
+            <text class="status-tag {{item.alreadySent ? 'sent' : 'not-sent'}}">
+              {{item.alreadySent ? '已发送' : '未发送'}}
+            </text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer">
+    <button 
+      class="batch-auth-btn"
+      bindtap="onRequestAllSubscribe"
+      disabled="{{loading}}"
+    >
+      <text class="btn-text">{{loading ? '授权中...' : '一键授权全部'}}</text>
+    </button>
+  </view>
+</view>
+
+

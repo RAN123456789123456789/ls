@@ -1,0 +1,72 @@
+<!--pages/myBorrows/myBorrows.wxml-->
+<view class="container">
+  <view wx:if="{{loading && records.length === 0}}" class="loading">
+    <text>加载中...</text>
+  </view>
+
+  <view wx:elif="{{records.length === 0}}" class="empty">
+    <text>暂无借阅记录</text>
+    <button class="goto-books-btn" bindtap="goToBooks">去借书</button>
+  </view>
+
+  <scroll-view 
+    wx:else
+    class="record-list" 
+    scroll-y 
+    refresher-enabled
+    refresher-triggered="{{loading}}"
+    bindrefresherrefresh="onPullDownRefresh"
+  >
+    <view 
+      class="record-item" 
+      wx:for="{{records}}" 
+      wx:key="id"
+    >
+      <view class="record-header">
+        <text class="book-name">{{item.bookName}}</text>
+        <view class="header-right">
+          <text class="status-badge status-{{item.status}}">
+            {{item.statusText}}
+          </text>
+          <text class="days-info {{item.daysType}}">
+            {{item.daysText}}
+          </text>
+        </view>
+      </view>
+      
+      <view class="record-info">
+        <view class="info-row">
+          <text class="info-label">借阅编号：</text>
+          <text class="info-value">{{item.id}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.borrowDate}}">
+          <text class="info-label">借阅日期：</text>
+          <text class="info-value">{{item.borrowDate}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.returnDate}}">
+          <text class="info-label">应归还日期：</text>
+          <text class="info-value">{{item.returnDate}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.borrowTime}}">
+          <text class="info-label">借出时间：</text>
+          <text class="info-value">{{item.borrowTime}}</text>
+        </view>
+      </view>
+
+      <view class="record-actions" wx:if="{{item.status === 'borrowed'}}">
+        <button 
+          class="return-btn"
+          bindtap="onReturn"
+          data-recordid="{{item.id}}"
+          data-bookname="{{item.bookName}}"
+        >
+          申请归还
+        </button>
+      </view>
+      <view class="record-actions" wx:elif="{{item.status === 'returned'}}">
+        <text class="returned-text">已归还</text>
+      </view>
+    </view>
+  </scroll-view>
+</view>
+

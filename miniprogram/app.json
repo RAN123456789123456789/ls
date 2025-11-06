@@ -1,0 +1,44 @@
+{
+  "pages": [
+    "pages/borrow/borrow",
+    "pages/mine/mine",
+    "pages/borrowForm/borrowForm",
+    "pages/adminReview/adminReview",
+    "pages/books/books",
+    "pages/bookDetail/bookDetail",
+    "pages/borrowRequest/borrowRequest",
+    "pages/myBorrows/myBorrows",
+    "pages/subscribe/subscribe",
+    "pages/logs/logs",
+    "pages/login/login",
+    "pages/admin/admin"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "图书借阅",
+    "navigationBarBackgroundColor": "#ffffff"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#3cc51f",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/borrow/borrow",
+        "text": "借阅",
+        "iconPath": "images/tabbar/borrow.png",
+        "selectedIconPath": "images/tabbar/borrow-active.png"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的",
+        "iconPath": "images/tabbar/mine.png",
+        "selectedIconPath": "images/tabbar/mine-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "componentFramework": "glass-easel",
+  "lazyCodeLoading": "requiredComponents"
+}

@@ -1,0 +1,23 @@
+# 微信小程序相关
+node_modules/
+npm-debug.log
+.DS_Store
+
+# 编译输出
+miniprogram_npm/
+
+# 敏感信息（如果包含）
+project.private.config.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+*.temp

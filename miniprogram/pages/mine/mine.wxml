@@ -1,0 +1,96 @@
+<!--mine.wxml-->
+<view class="container">
+  <!-- 未登录状态 -->
+  <view class="login-section" wx:if="{{!isLoggedIn}}">
+    <view class="login-card">
+      <view class="login-icon">👤</view>
+      <text class="login-title">欢迎使用图书借阅系统</text>
+      <text class="login-desc">请先登录以使用完整功能</text>
+      <button 
+        class="login-btn" 
+        bindtap="handleWechatLogin"
+        disabled="{{loading}}"
+        loading="{{loading}}"
+      >
+        <text class="btn-text">{{loading ? '登录中...' : '微信一键登录'}}</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 已登录状态 -->
+  <scroll-view class="user-section" scroll-y wx:else>
+    <!-- 用户信息卡片 -->
+    <view class="user-card">
+      <view class="user-header">
+        <view class="avatar-wrapper" bindtap="handleEditAvatar">
+          <image 
+            class="avatar" 
+            src="{{userInfo.avatarUrl || 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'}}" 
+            mode="aspectFill"
+          ></image>
+        </view>
+        <view class="user-info">
+          <view class="nickname-wrapper">
+            <text class="nickname">{{userInfo.nickName || '未设置昵称'}}</text>
+            <text class="edit-name-icon" bindtap="handleEditName">✏️</text>
+          </view>
+          <view class="phone-wrapper">
+            <text class="user-id" wx:if="{{phoneNumber}}">{{phoneNumber}}</text>
+            <button 
+              class="phone-setting-btn" 
+              open-type="getPhoneNumber"
+              bindgetphonenumber="handleSetPhoneNumber"
+            >
+              <text class="phone-setting-icon">📱</text>
+            </button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 编辑按钮 -->
+    <view class="edit-section">
+      <button class="edit-btn" bindtap="handleEditProfile">
+        <text class="btn-text">编辑资料</text>
+      </button>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-section">
+      <button class="admin-btn" bindtap="goToAdminLogin">管理员登录</button>
+      <button class="logout-btn" bindtap="handleLogout">退出登录</button>
+    </view>
+
+    <!-- 编辑名称弹窗 -->
+    <view class="modal" wx:if="{{showEditNameModal}}" bindtap="closeEditNameModal">
+      <view class="modal-content" catchtap="stopPropagation">
+        <view class="modal-header">
+          <text class="modal-title">修改昵称</text>
+          <text class="modal-close" bindtap="closeEditNameModal">✕</text>
+        </view>
+        <view class="modal-body">
+          <input 
+            class="name-input" 
+            type="text" 
+            placeholder="请输入新昵称" 
+            value="{{editNickName}}"
+            bindinput="onNickNameInput"
+            maxlength="20"
+          />
+        </view>
+        <view class="modal-footer">
+          <button class="modal-btn cancel-btn" bindtap="closeEditNameModal">取消</button>
+          <button class="modal-btn confirm-btn" bindtap="confirmEditName">确定</button>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 管理员登录入口（未登录状态也显示） -->
+  <view class="admin-section" wx:if="{{!isLoggedIn}}">
+    <view class="admin-divider">
+      <text class="divider-text">或</text>
+    </view>
+    <button class="admin-btn-outline" bindtap="goToAdminLogin">管理员登录</button>
+  </view>
+</view>
