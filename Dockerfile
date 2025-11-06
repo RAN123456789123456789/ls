@@ -13,8 +13,8 @@ RUN npm install --production
 # 复制应用代码
 COPY . .
 
-# 暴露端口（微信云托管使用80端口进行健康检查）
-EXPOSE 80
+# 暴露端口（使用8080，云托管会映射到80端口）
+EXPOSE 8080
 
 # 启动应用
 CMD ["node", "server.js"]
