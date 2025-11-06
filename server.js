@@ -3,7 +3,8 @@ const axios = require('axios');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+// 微信云托管使用80端口进行健康检查
+const PORT = process.env.PORT || 80;
 
 // 中间件
 app.use(cors());
