@@ -2,6 +2,8 @@
 page {
   height: 100vh;
   background: #f5f5f5;
+  padding: 0;
+  margin: 0;
 }
 
 .container {
@@ -9,11 +11,15 @@ page {
   flex-direction: column;
   height: 100vh;
   background: #f5f5f5;
+  padding: 0;
+  margin: 0;
 }
 
 .content {
   flex: 1;
+  padding: 0;
   padding-bottom: 180rpx;
+  margin: 0;
 }
 
 /* 区块 */
@@ -26,6 +32,7 @@ page {
 
 .section:first-child {
   margin-top: 0;
+  padding-top: 0;
 }
 
 .section-title {

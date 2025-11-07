@@ -61,29 +61,40 @@
       </view>
 
       <view class="request-info">
-        <view class="info-row" wx:if="{{item.name}}">
+        <!-- 必填字段：姓名 -->
+        <view class="info-row">
           <text class="info-label">借阅人：</text>
-          <text class="info-value">{{item.name}}</text>
+          <text class="info-value">{{item.name || '未填写'}}</text>
         </view>
-        <view class="info-row" wx:if="{{item.phone}}">
+        <!-- 必填字段：电话 -->
+        <view class="info-row">
           <text class="info-label">电话：</text>
-          <text class="info-value">{{item.phone}}</text>
+          <text class="info-value">{{item.phone || '未填写'}}</text>
         </view>
+        <!-- 必填字段：借阅日期 -->
+        <view class="info-row">
+          <text class="info-label">借阅日期：</text>
+          <text class="info-value">{{item.borrowDate || '未选择'}}</text>
+        </view>
+        <!-- 必填字段：归还日期 -->
+        <view class="info-row">
+          <text class="info-label">归还日期：</text>
+          <text class="info-value">{{item.returnDate || '未选择'}}</text>
+        </view>
+        <!-- 必填字段：借阅天数 -->
+        <view class="info-row">
+          <text class="info-label">借阅天数：</text>
+          <text class="info-value">{{item.borrowDays || 0}}天</text>
+        </view>
+        <!-- 可选字段：借阅事由 -->
         <view class="info-row" wx:if="{{item.reason}}">
           <text class="info-label">借阅事由：</text>
           <text class="info-value">{{item.reason}}</text>
         </view>
+        <!-- 申请时间 -->
         <view class="info-row">
           <text class="info-label">申请时间：</text>
           <text class="info-value">{{item.formattedCreatedAt || item.createdAt}}</text>
-        </view>
-        <view class="info-row" wx:if="{{item.borrowDate}}">
-          <text class="info-label">借阅日期：</text>
-          <text class="info-value">{{item.borrowDate}}</text>
-        </view>
-        <view class="info-row" wx:if="{{item.returnDate}}">
-          <text class="info-label">归还日期：</text>
-          <text class="info-value">{{item.returnDate}}</text>
         </view>
       </view>
 

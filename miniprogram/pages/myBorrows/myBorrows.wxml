@@ -23,14 +23,9 @@
     >
       <view class="record-header">
         <text class="book-name">{{item.bookName}}</text>
-        <view class="header-right">
-          <text class="status-badge status-{{item.status}}">
-            {{item.statusText}}
-          </text>
-          <text class="days-info {{item.daysType}}">
-            {{item.daysText}}
-          </text>
-        </view>
+        <text class="days-info {{item.daysType}}">
+          {{item.daysText}}
+        </text>
       </view>
       
       <view class="record-info">
@@ -41,6 +36,12 @@
         <view class="info-row" wx:if="{{item.borrowDate}}">
           <text class="info-label">借阅日期：</text>
           <text class="info-value">{{item.borrowDate}}</text>
+        </view>
+        <view class="info-row status-row">
+          <text class="info-label">状态：</text>
+          <text class="status-badge status-{{item.status}}">
+            {{item.statusText}}
+          </text>
         </view>
         <view class="info-row" wx:if="{{item.returnDate}}">
           <text class="info-label">应归还日期：</text>

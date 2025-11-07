@@ -2,6 +2,8 @@
 page {
   height: 100vh;
   background: #ffffff;
+  padding: 0;
+  margin: 0;
 }
 
 .container {
@@ -9,6 +11,8 @@ page {
   flex-direction: column;
   height: 100vh;
   background: #ffffff;
+  padding: 0;
+  margin: 0;
 }
 
 /* 未登录状态 */
@@ -161,13 +165,16 @@ page {
 /* 已登录状态 */
 .user-section {
   flex: 1;
+  padding: 0;
   padding-bottom: 40rpx;
+  margin: 0;
 }
 
 .user-card {
   background: #ffffff;
   padding: 30rpx 40rpx 30rpx;
   margin: 0 20rpx 12rpx;
+  margin-top: 0;
   border-radius: 24rpx;
   box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
   border: 1rpx solid rgba(0, 0, 0, 0.04);

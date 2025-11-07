@@ -38,7 +38,7 @@
       <text class="section-title">基本信息</text>
       
       <view class="form-item">
-        <text class="form-label">姓名</text>
+        <text class="form-label">姓名 <text class="required-mark">*</text></text>
         <input 
           class="form-input" 
           placeholder="请输入姓名"
@@ -49,11 +49,11 @@
       </view>
 
       <view class="form-item">
-        <text class="form-label">电话（选填）</text>
+        <text class="form-label">电话 <text class="required-mark">*</text></text>
         <input 
           class="form-input" 
           type="number"
-          placeholder="请输入联系电话（选填）"
+          placeholder="请输入联系电话"
           value="{{form.phone}}"
           bindinput="onInputChange"
           data-field="phone"
@@ -89,21 +89,21 @@
       <text class="section-title">时间信息</text>
       
       <view class="form-item">
-        <text class="form-label">借阅日期</text>
+        <text class="form-label">借阅日期 <text class="required-mark">*</text></text>
         <picker 
           mode="date"
           value="{{borrowDate}}"
           bindchange="onBorrowDateChange"
         >
           <view class="picker">
-            <text>{{borrowDate || '请选择借阅日期'}}</text>
+            <text class="{{borrowDate ? '' : 'placeholder-text'}}">{{borrowDate || '请选择借阅日期'}}</text>
             <text class="picker-arrow">›</text>
           </view>
         </picker>
       </view>
 
       <view class="form-item">
-        <text class="form-label">归还日期</text>
+        <text class="form-label">归还日期 <text class="required-mark">*</text></text>
         <picker 
           mode="date"
           value="{{returnDate}}"
@@ -111,14 +111,14 @@
           bindchange="onReturnDateChange"
         >
           <view class="picker">
-            <text>{{returnDate || '请选择归还日期'}}</text>
+            <text class="{{returnDate ? '' : 'placeholder-text'}}">{{returnDate || '请选择归还日期'}}</text>
             <text class="picker-arrow">›</text>
           </view>
         </picker>
       </view>
 
       <view class="form-item">
-        <text class="form-label">借阅天数</text>
+        <text class="form-label">借阅天数 <text class="required-mark">*</text></text>
         <picker 
           mode="selector" 
           range="{{[7, 14, 21, 30]}}"

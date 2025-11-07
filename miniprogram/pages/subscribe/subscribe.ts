@@ -79,11 +79,17 @@ Page({
                     message = '您拒绝了授权';
                 } else if (result.errMsg === 'ban') {
                     message = '该功能被禁用';
+                } else if (result.errMsg === 'filter') {
+                    message = '该订阅消息被过滤，请稍后再试';
+                } else if (result.errCode === -3) {
+                    message = '模板ID未配置';
+                } else if (result.errMsg) {
+                    message = `授权失败：${result.errMsg}`;
                 }
                 wx.showToast({
                     title: message,
                     icon: 'none',
-                    duration: 2000,
+                    duration: 2500,
                 });
             }
         } catch (error: any) {
@@ -118,7 +124,8 @@ Page({
             const results = await requestSubscribeMessage(types);
 
             const successCount = results.filter(r => r.success).length;
-            const failCount = results.length - successCount;
+            const failResults = results.filter(r => !r.success);
+            const failCount = failResults.length;
 
             if (successCount > 0) {
                 wx.showToast({
@@ -129,12 +136,35 @@ Page({
             }
 
             if (failCount > 0) {
+                // 找出失败的具体项
+                const failedTitles = failResults.map(result => {
+                    const item = this.data.subscribeList.find(s => s.type === result.type);
+                    return item ? item.title : result.type;
+                });
+
+                // 延迟显示失败提示，避免与成功提示重叠
                 setTimeout(() => {
+                    let failMessage = `${failCount}个授权失败`;
+
+                    // 如果只有一个失败，显示具体名称
+                    if (failCount === 1 && failedTitles.length > 0) {
+                        failMessage = `${failedTitles[0]}授权失败`;
+
+                        // 根据错误类型给出更具体的提示
+                        const failResult = failResults[0];
+                        if (failResult.errMsg === 'reject') {
+                            failMessage = `您拒绝了${failedTitles[0]}的授权`;
+                        } else if (failResult.errMsg === 'ban') {
+                            failMessage = `${failedTitles[0]}功能被禁用`;
+                        }
+                    }
+
                     wx.showToast({
-                        title: `${failCount}个授权失败`,
+                        title: failMessage,
                         icon: 'none',
+                        duration: 3000,
                     });
-                }, 1500);
+                }, successCount > 0 ? 1500 : 0);
             }
         } catch (error: any) {
             console.error('批量授权失败:', error);

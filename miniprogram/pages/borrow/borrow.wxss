@@ -9,6 +9,8 @@ page {
   flex-direction: column;
   height: 100vh;
   padding: 0;
+  position: relative;
+  overflow: visible;
 }
 
 /* 顶部功能栏 */
@@ -27,8 +29,8 @@ page {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20rpx 30rpx;
-  height: 88rpx;
+  padding: 16rpx 20rpx;
+  height: 80rpx;
 }
 
 .page-title {
@@ -73,35 +75,32 @@ page {
   display: flex;
   flex-direction: row;
   width: 100%;
-  height: calc(100vh - 88rpx - env(safe-area-inset-top));
-  margin-top: calc(88rpx + env(safe-area-inset-top));
+  margin-top: calc(80rpx + env(safe-area-inset-top));
   align-items: center;
   justify-content: center;
-  flex: 1;
+  padding: 40rpx 0;
+  position: relative;
+  z-index: 10;
 }
 
 .borrow-btn,
 .return-btn {
-  width: 375rpx;
-  height: 50vh;
+  flex: 1;
+  height: 200rpx;
   font-size: 36rpx;
   font-weight: 600;
   color: #1a1a1a;
-  border: 2rpx solid #e5e5ea;
-  border-radius: 0;
+  border: none;
+  border-radius: 16rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #ffffff;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
-}
-
-.borrow-btn {
-  background-color: #ffffff;
-}
-
-.return-btn {
-  background-color: #ffffff;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  margin: 0 20rpx;
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
 }
 
 .borrow-btn:active,
@@ -112,11 +111,5 @@ page {
 .return-btn:active,
 .return-btn-hover {
   background-color: #f9f9f9;
-}
-
-.borrow-btn,
-.return-btn {
-  position: relative;
-  z-index: 1;
 }
 

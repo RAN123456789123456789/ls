@@ -176,19 +176,62 @@ export async function saveUserToDatabase(userInfo: UserInfo): Promise<{ success:
             const userCollection = db.collection('user');
             const now = getBeijingTimeISOString();
 
-            // 先查询用户是否已存在
-            const queryResult = await userCollection.where({
-                openId: userInfo.openId
-            }).get();
+            // 重要：优先使用云开发的 _openid 查询用户，确保同一微信账号每次登录都能找到同一用户
+            // 云开发在启用权限控制时会自动添加 _openid 条件，这是微信官方提供的唯一标识
+
+            let existingUser: DBUserInfo | null = null;
+
+            // 方案1：先尝试用 openId 查询（兼容性更好）
+            try {
+                const queryResultByOpenId = await userCollection.where({
+                    openId: userInfo.openId
+                }).get();
+
+                if (queryResultByOpenId.data && queryResultByOpenId.data.length > 0) {
+                    existingUser = queryResultByOpenId.data[0];
+                }
+            } catch (queryError: any) {
+                console.warn('使用 openId 查询失败，尝试其他方式:', queryError);
+            }
+
+            // 方案2：如果通过 openId 查询不到，尝试直接查询当前用户（云开发会自动添加 _openid 条件）
+            if (!existingUser) {
+                try {
+                    let queryResult = await userCollection.get();
+
+                    if (queryResult.data && queryResult.data.length > 0) {
+                        // 优先查找 openId 匹配的用户
+                        existingUser = queryResult.data.find((user: DBUserInfo) => user.openId === userInfo.openId) as DBUserInfo;
+
+                        // 如果没找到 openId 匹配的，取第一条（因为权限控制，只会返回当前用户的数据）
+                        if (!existingUser) {
+                            existingUser = queryResult.data[0] as DBUserInfo;
+                        }
+                    }
+                } catch (getError: any) {
+                    console.warn('直接查询当前用户失败:', getError);
+                }
+            }
 
             let result;
 
-            if (queryResult.data && queryResult.data.length > 0) {
+            if (existingUser) {
                 // 用户已存在，更新信息
-                const existingUser = queryResult.data[0];
+                // 如果 openId 不一致，先更新 openId 字段以保持一致性
+                if (existingUser.openId !== userInfo.openId) {
+                    console.log('发现 openId 不一致，更新 openId 字段', {
+                        oldOpenId: existingUser.openId,
+                        newOpenId: userInfo.openId
+                    });
+                }
                 const updateData: any = {
                     updatedAt: now,
                 };
+
+                // 如果 openId 不一致，更新 openId 字段
+                if (existingUser.openId !== userInfo.openId) {
+                    updateData.openId = userInfo.openId;
+                }
 
                 // 只更新有值的字段
                 if (userInfo.nickName) updateData.nickName = userInfo.nickName;
@@ -282,43 +325,106 @@ export async function userLogin(userProfile?: WechatMiniprogram.UserInfo, phoneN
             };
         }
 
-        // 构建用户信息
-        const userInfo: UserInfo = {
-            openId,
-            nickName: userProfile?.nickName || '',
-            avatarUrl: userProfile?.avatarUrl || '',
-            phoneNumber: phoneNumber || '',
-        };
+        // 先检查数据库中是否已有该用户信息
+        // 用户唯一性：通过 openId 字段保证，登录时会先查询数据库中是否已有该用户
+        console.log('登录时检查数据库中是否已有用户信息，openId:', openId);
+        const dbUserResult = await getUserFromDatabase(openId);
 
-        // 从本地存储获取其他信息
-        const localUserInfo = wx.getStorageSync('user_info');
-        if (localUserInfo) {
-            userInfo.department = localUserInfo.department;
-            userInfo.email = localUserInfo.email;
-        }
+        let existingUserData: DBUserInfo | null = null;
+        if (dbUserResult.success && dbUserResult.data) {
+            // 数据库中已有该用户，同步所有数据到本地
+            // 这样可以确保用户每次登录都能获取到之前保存的所有信息（昵称、头像、手机号、部门、邮箱等）
+            console.log('数据库中已有用户信息，同步到本地:', dbUserResult.data);
+            existingUserData = dbUserResult.data;
 
-        // 保存到数据库
-        const result = await saveUserToDatabase(userInfo);
-
-        if (result.success && result.data) {
-            // 保存到本地存储
-            wx.setStorageSync('user_info', result.data);
+            // 同步所有数据到本地存储
+            wx.setStorageSync('user_info', existingUserData);
             wx.setStorageSync('user_openId', openId);
-            // 设置明确的登录标志（只有在有用户信息时才设置为true）
-            if (userProfile && userProfile.nickName) {
+
+            // 如果有昵称和头像，也单独保存
+            if (existingUserData.nickName) {
+                wx.setStorageSync('userInfo', {
+                    nickName: existingUserData.nickName,
+                    avatarUrl: existingUserData.avatarUrl || '',
+                });
+            }
+            if (existingUserData.phoneNumber) {
+                wx.setStorageSync('phoneNumber', existingUserData.phoneNumber);
+            }
+
+            // 设置登录标志
+            if (existingUserData.nickName) {
                 wx.setStorageSync('is_user_logged_in', true);
             }
-
-            // 如果有用户信息，也单独保存
-            if (userProfile) {
-                wx.setStorageSync('userInfo', userProfile);
-            }
-            if (phoneNumber) {
-                wx.setStorageSync('phoneNumber', phoneNumber);
-            }
         }
 
-        return result;
+        // 构建要更新的用户信息（合并数据库中的数据和新的授权信息）
+        const userInfo: UserInfo = {
+            openId,
+            // 优先使用新的授权信息（如果提供），否则使用数据库中的数据
+            // 这样可以确保新上传的头像不会被数据库中的旧头像覆盖
+            nickName: userProfile?.nickName || existingUserData?.nickName || '',
+            avatarUrl: userProfile?.avatarUrl || existingUserData?.avatarUrl || '',
+            phoneNumber: phoneNumber || existingUserData?.phoneNumber || '',
+            department: existingUserData?.department || '',
+            email: existingUserData?.email || '',
+        };
+
+        // 如果有新的授权信息（userProfile或phoneNumber），更新数据库
+        const hasNewInfo = (userProfile && userProfile.nickName) || phoneNumber;
+        if (hasNewInfo) {
+            console.log('有新的用户信息，更新数据库');
+            // 保存到数据库（会更新或创建）
+            const result = await saveUserToDatabase(userInfo);
+
+            if (result.success && result.data) {
+                // 更新本地存储（使用数据库返回的最新数据）
+                wx.setStorageSync('user_info', result.data);
+                wx.setStorageSync('user_openId', openId);
+
+                // 设置明确的登录标志（只有在有用户信息时才设置为true）
+                if (userProfile && userProfile.nickName) {
+                    wx.setStorageSync('is_user_logged_in', true);
+                }
+
+                // 如果有用户信息，也单独保存
+                if (userProfile) {
+                    wx.setStorageSync('userInfo', userProfile);
+                }
+                if (phoneNumber) {
+                    wx.setStorageSync('phoneNumber', phoneNumber);
+                }
+
+                return result;
+            } else {
+                // 更新失败，但已有数据库数据，返回数据库数据
+                if (existingUserData) {
+                    return {
+                        success: true,
+                        message: '数据库更新失败，但已同步现有数据',
+                        data: existingUserData,
+                    };
+                }
+                return result;
+            }
+        } else {
+            // 没有新的授权信息，但已从数据库同步了数据
+            if (existingUserData) {
+                return {
+                    success: true,
+                    message: '已同步数据库中的用户信息',
+                    data: existingUserData,
+                };
+            } else {
+                // 既没有数据库数据，也没有新授权信息，创建基本用户记录
+                const result = await saveUserToDatabase(userInfo);
+                if (result.success && result.data) {
+                    wx.setStorageSync('user_info', result.data);
+                    wx.setStorageSync('user_openId', openId);
+                }
+                return result;
+            }
+        }
     } catch (error: any) {
         console.error('用户登录失败:', error);
         return {
@@ -362,32 +468,86 @@ export async function getUserFromDatabase(openId?: string): Promise<{ success: b
             }
 
             const userCollection = db.collection('user');
-            const result = await userCollection.where({
-                openId: targetOpenId
-            }).get();
 
-            if (result.data && result.data.length > 0) {
-                const userData = result.data[0] as DBUserInfo;
-                // 同步到本地存储
-                wx.setStorageSync('user_info', userData);
-                return {
-                    success: true,
-                    data: userData,
-                };
-            } else {
-                // 未找到用户，尝试从本地存储获取
-                const localUser = wx.getStorageSync('user_info');
-                if (localUser) {
+            // 重要：优先使用云开发的 _openid 查询用户，确保同一微信账号每次登录都能找到同一用户
+            // 云开发在启用权限控制时会自动添加 _openid 条件，这是微信官方提供的唯一标识
+            // 如果只使用自定义的 openId 查询，当 openId 和 _openid 不一致时，可能查询不到已存在的用户
+
+            // 方案1：先尝试用 openId 查询（兼容性更好）
+            try {
+                const queryResult = await userCollection.where({
+                    openId: targetOpenId
+                }).get();
+
+                if (queryResult.data && queryResult.data.length > 0) {
+                    const userData = queryResult.data[0] as DBUserInfo;
+                    wx.setStorageSync('user_info', userData);
                     return {
                         success: true,
-                        data: localUser as DBUserInfo,
+                        data: userData,
                     };
                 }
+            } catch (queryError: any) {
+                console.warn('使用 openId 查询失败，尝试其他方式:', queryError);
+            }
+
+            // 方案2：直接查询当前用户（云开发会自动添加 _openid 条件）
+            // 这样可以确保同一微信账号每次登录都能找到同一用户
+            try {
+                let result = await userCollection.get();
+
+                // 如果查询到数据，检查是否有匹配的用户
+                if (result.data && result.data.length > 0) {
+                    // 优先查找 openId 匹配的用户
+                    let userData = result.data.find((user: DBUserInfo) => user.openId === targetOpenId) as DBUserInfo;
+
+                    // 如果没找到 openId 匹配的，取第一条（因为权限控制，只会返回当前用户的数据）
+                    if (!userData) {
+                        userData = result.data[0] as DBUserInfo;
+                        // 如果 openId 不一致，更新 openId 字段以保持一致性
+                        if (userData.openId !== targetOpenId) {
+                            console.log('发现 openId 不一致，更新 openId 字段', {
+                                oldOpenId: userData.openId,
+                                newOpenId: targetOpenId
+                            });
+                            try {
+                                // 更新 openId 字段
+                                await userCollection.doc(userData._id).update({
+                                    data: {
+                                        openId: targetOpenId
+                                    }
+                                });
+                                userData.openId = targetOpenId;
+                            } catch (updateError: any) {
+                                console.warn('更新 openId 失败:', updateError);
+                            }
+                        }
+                    }
+
+                    // 同步到本地存储
+                    wx.setStorageSync('user_info', userData);
+                    return {
+                        success: true,
+                        data: userData,
+                    };
+                }
+            } catch (getError: any) {
+                console.warn('直接查询当前用户失败:', getError);
+            }
+
+            // 方案3：未找到用户，尝试从本地存储获取
+            const localUser = wx.getStorageSync('user_info');
+            if (localUser) {
                 return {
-                    success: false,
-                    message: '未找到用户信息',
+                    success: true,
+                    data: localUser as DBUserInfo,
                 };
             }
+
+            return {
+                success: false,
+                message: '未找到用户信息',
+            };
         } catch (dbError: any) {
             // 云数据库操作失败，降级到本地存储
             console.warn('云数据库查询失败，使用本地存储:', dbError);
@@ -705,14 +865,43 @@ export async function updateUserProfile(
         try {
             const userCollection = db.collection('user');
 
-            // 查询用户
-            const queryResult = await userCollection.where({
-                openId: openId
-            }).get();
+            // 重要：优先使用云开发的 _openid 查询用户，确保同一微信账号每次登录都能找到同一用户
+            // 直接查询当前用户（云开发会自动添加 _openid 条件）
+            let queryResult = await userCollection.get();
+
+            let existingUser: DBUserInfo | null = null;
 
             if (queryResult.data && queryResult.data.length > 0) {
+                // 优先查找 openId 匹配的用户
+                existingUser = queryResult.data.find((user: DBUserInfo) => user.openId === openId) as DBUserInfo;
+
+                // 如果没找到 openId 匹配的，取第一条（因为权限控制，只会返回当前用户的数据）
+                if (!existingUser) {
+                    existingUser = queryResult.data[0] as DBUserInfo;
+                }
+            }
+
+            // 如果通过 _openid 查询不到，尝试用 openId 查询（兼容旧数据）
+            if (!existingUser) {
+                const queryResultByOpenId = await userCollection.where({
+                    openId: openId
+                }).get();
+
+                if (queryResultByOpenId.data && queryResultByOpenId.data.length > 0) {
+                    existingUser = queryResultByOpenId.data[0];
+                }
+            }
+
+            if (existingUser) {
                 // 用户存在，更新信息
-                const existingUser = queryResult.data[0];
+                // 如果 openId 不一致，更新 openId 字段以保持一致性
+                if (existingUser.openId !== openId) {
+                    console.log('发现 openId 不一致，更新 openId 字段', {
+                        oldOpenId: existingUser.openId,
+                        newOpenId: openId
+                    });
+                    updateData.openId = openId;
+                }
                 await userCollection.doc(existingUser._id).update({
                     data: updateData
                 });

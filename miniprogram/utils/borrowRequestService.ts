@@ -51,9 +51,12 @@ export interface BorrowRequestForm {
     bookId: string;
     bookName: string;
     borrowDays: number;
-    // 个人信息（非必填）
-    name?: string; // 姓名
-    phone?: string; // 电话
+    // 必填字段
+    name: string; // 姓名（必填）
+    phone: string; // 电话（必填）
+    borrowDate?: string; // 借阅日期（格式：YYYY-MM-DD，必填）
+    returnDate?: string; // 归还日期（格式：YYYY-MM-DD，必填）
+    // 可选字段
     email?: string; // 邮箱
     department?: string; // 部门/院系
     reason?: string; // 借阅原因
@@ -117,6 +120,9 @@ export async function submitBorrowRequest(
             department: form.department || '',
             reason: form.reason || '',
             remark: form.remark || '',
+            // 必填字段：借阅日期和归还日期
+            borrowDate: (form as any).borrowDate || '',
+            returnDate: (form as any).returnDate || '',
             createdAt: now,
             updatedAt: now,
         };

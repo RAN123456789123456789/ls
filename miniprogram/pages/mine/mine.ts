@@ -19,6 +19,7 @@ Page({
         tempNickName: '', // 临时昵称（用于登录时）
         showPhoneInputModal: false, // 是否显示手机号输入弹窗
         inputPhoneNumber: '', // 输入的手机号
+        checkingLogin: false, // 是否正在检查登录状态
     },
 
     onLoad() {
@@ -26,15 +27,25 @@ Page({
     },
 
     onShow() {
-        // 每次显示页面时刷新用户信息
-        this.checkLoginStatus();
+        // 每次显示页面时刷新用户信息，但避免频繁调用
+        // 如果正在检查登录状态，则不重复调用
+        if (!this.data.checkingLogin) {
+            this.checkLoginStatus();
+        }
     },
 
     /**
      * 检查登录状态
      */
     async checkLoginStatus() {
+        // 防止重复调用
+        if (this.data.checkingLogin) {
+            return;
+        }
+
         try {
+            this.setData({ checkingLogin: true });
+
             // 首先检查明确的退出登录标志
             const isLoggedInFlag = wx.getStorageSync('is_user_logged_in');
             if (isLoggedInFlag === false) {
@@ -48,6 +59,7 @@ Page({
                     phoneNumber: '',
                     department: '',
                     email: '',
+                    checkingLogin: false,
                 });
                 return;
             }
@@ -79,6 +91,7 @@ Page({
                             phoneNumber: userData.phoneNumber || '',
                             department: userData.department || '',
                             email: userData.email || '',
+                            checkingLogin: false,
                         });
                     } else {
                         // 从本地存储获取
@@ -97,6 +110,11 @@ Page({
                                     avatarUrl: avatarUrl,
                                 },
                                 phoneNumber: phoneNumber || '',
+                                checkingLogin: false,
+                            });
+                        } else {
+                            this.setData({
+                                checkingLogin: false,
                             });
                         }
                     }
@@ -111,6 +129,7 @@ Page({
                         phoneNumber: '',
                         department: '',
                         email: '',
+                        checkingLogin: false,
                     });
                 }
             } else {
@@ -124,10 +143,15 @@ Page({
                     phoneNumber: '',
                     department: '',
                     email: '',
+                    checkingLogin: false,
                 });
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('检查登录状态失败:', error);
+            // 确保重置 checkingLogin 标志
+            this.setData({
+                checkingLogin: false,
+            });
         }
     },
 
@@ -197,16 +221,32 @@ Page({
             // 登录并保存到数据库
             const loginResult = await userLogin(userInfo);
 
-            if (loginResult.success) {
+            if (loginResult.success && loginResult.data) {
                 // 设置明确的登录标志
                 wx.setStorageSync('is_user_logged_in', true);
 
-                // 更新页面数据
+                // 使用登录返回的最新数据更新页面（确保使用最新上传的头像）
+                const loginData = loginResult.data;
+                let displayAvatarUrl = loginData.avatarUrl || finalAvatarUrl;
+
+                // 如果头像URL是云存储fileID，转换为临时访问URL
+                if (displayAvatarUrl && displayAvatarUrl.startsWith('cloud://')) {
+                    displayAvatarUrl = await getAvatarURL(displayAvatarUrl);
+                }
+
+                // 更新页面数据，优先使用登录返回的数据
                 this.setData({
                     isLoggedIn: true,
-                    userInfo: userInfo,
+                    userInfo: {
+                        nickName: loginData.nickName || defaultNickName,
+                        avatarUrl: displayAvatarUrl || finalAvatarUrl,
+                    },
+                    phoneNumber: loginData.phoneNumber || '',
+                    department: loginData.department || '',
+                    email: loginData.email || '',
                     tempAvatarUrl: '',
                     tempNickName: '',
+                    loading: false,
                 });
 
                 wx.showToast({
@@ -214,8 +254,7 @@ Page({
                     icon: 'success',
                 });
 
-                // 刷新用户信息
-                await this.checkLoginStatus();
+                // 不需要再次调用 checkLoginStatus，因为已经使用了最新的登录数据
             } else {
                 wx.showToast({
                     title: loginResult.message || '登录失败',

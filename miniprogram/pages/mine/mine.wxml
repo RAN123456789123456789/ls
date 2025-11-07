@@ -40,19 +40,6 @@
           <view class="phone-wrapper">
             <text class="user-id" wx:if="{{phoneNumber}}">{{phoneNumber}}</text>
             <text class="user-id-placeholder" wx:else>未绑定手机号</text>
-            <button 
-              class="phone-setting-btn" 
-              open-type="getPhoneNumber"
-              bindgetphonenumber="handleSetPhoneNumber"
-            >
-              <text class="phone-setting-text">绑定</text>
-            </button>
-            <button 
-              class="phone-setting-btn manual-btn" 
-              bindtap="showManualPhoneInput"
-            >
-              <text class="phone-setting-text">手动输入</text>
-            </button>
           </view>
         </view>
       </view>

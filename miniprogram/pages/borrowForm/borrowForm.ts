@@ -163,46 +163,96 @@ Page({
      * 获取用户信息授权
      */
     async getUserProfile() {
-        wx.getUserProfile({
-            desc: '用于完善借阅信息',
-            success: async (res) => {
-                console.log('获取用户信息成功:', res);
-                this.setData({
-                    hasUserInfo: true,
-                    userInfo: res.userInfo,
-                    'form.name': res.userInfo.nickName || '',
-                });
-                // 保存到本地
-                wx.setStorageSync('userInfo', res.userInfo);
+        // 检查是否支持getUserProfile
+        if (!wx.canIUse('getUserProfile')) {
+            wx.showModal({
+                title: '提示',
+                content: '当前微信版本过低，请升级微信后重试',
+                showCancel: false,
+            });
+            return;
+        }
 
-                // 登录并保存用户信息到数据库
-                try {
-                    const loginResult = await userLogin(res.userInfo);
-                    if (loginResult.success) {
-                        console.log('用户信息已保存到数据库');
-                    } else {
-                        console.warn('保存用户信息到数据库失败:', loginResult.message);
-                    }
-                } catch (error) {
-                    console.error('保存用户信息失败:', error);
+        try {
+            // 先调用wx.login确保有登录态
+            const loginRes = await new Promise<WechatMiniprogram.LoginSuccessCallbackResult>(
+                (resolve, reject) => {
+                    wx.login({
+                        success: resolve,
+                        fail: reject,
+                    });
                 }
+            );
 
-                wx.showToast({
-                    title: '授权成功',
-                    icon: 'success',
-                });
+            if (!loginRes.code) {
+                throw new Error('获取登录code失败');
+            }
 
-                // 检查是否所有授权都已完成
-                this.checkAuthComplete();
-            },
-            fail: (err) => {
-                console.error('获取用户信息失败:', err);
-                wx.showToast({
-                    title: '授权失败',
-                    icon: 'none',
-                });
-            },
-        });
+            // 调用getUserProfile获取用户信息
+            const res = await new Promise<WechatMiniprogram.GetUserProfileSuccessCallbackResult>(
+                (resolve, reject) => {
+                    wx.getUserProfile({
+                        desc: '用于完善借阅信息',
+                        success: resolve,
+                        fail: reject,
+                    });
+                }
+            );
+
+            console.log('获取用户信息成功:', res);
+
+            // 更新页面数据
+            this.setData({
+                hasUserInfo: true,
+                userInfo: res.userInfo,
+                'form.name': res.userInfo.nickName || '',
+            });
+
+            // 保存到本地
+            wx.setStorageSync('userInfo', res.userInfo);
+
+            // 登录并保存用户信息到数据库
+            try {
+                const loginResult = await userLogin(res.userInfo);
+                if (loginResult.success) {
+                    console.log('用户信息已保存到数据库');
+                } else {
+                    console.warn('保存用户信息到数据库失败:', loginResult.message);
+                    // 即使数据库保存失败，也允许继续使用
+                }
+            } catch (error: any) {
+                console.error('保存用户信息失败:', error);
+                // 数据库保存失败不影响授权成功
+            }
+
+            wx.showToast({
+                title: '授权成功',
+                icon: 'success',
+            });
+
+            // 检查是否所有授权都已完成
+            this.checkAuthComplete();
+        } catch (err: any) {
+            console.error('获取用户信息失败:', err);
+
+            // 根据错误类型给出不同的提示
+            let errorMsg = '授权失败';
+            if (err.errMsg) {
+                if (err.errMsg.includes('cancel')) {
+                    errorMsg = '用户取消授权';
+                } else if (err.errMsg.includes('deny')) {
+                    errorMsg = '用户拒绝授权';
+                } else if (err.errMsg.includes('fail')) {
+                    errorMsg = '授权失败，请重试';
+                }
+            }
+
+            wx.showToast({
+                title: errorMsg,
+                icon: 'none',
+                duration: 2000,
+            });
+        }
     },
 
     /**
@@ -347,23 +397,42 @@ Page({
             return;
         }
 
-        if (!form.name) {
-            wx.showModal({
-                title: '提示',
-                content: '请先完成基本信息授权（姓名）',
-                showCancel: false,
-                success: () => {
-                    this.setData({
-                        showAuthModal: true,
-                    });
-                }
+        // 验证必填字段
+        if (!form.name || !form.name.trim()) {
+            wx.showToast({
+                title: '请输入姓名',
+                icon: 'none',
             });
             return;
         }
 
-        if (!borrowDate || !returnDate) {
+        if (!form.phone || !form.phone.trim()) {
             wx.showToast({
-                title: '请选择借阅和归还日期',
+                title: '请输入联系电话',
+                icon: 'none',
+            });
+            return;
+        }
+
+        if (!borrowDate) {
+            wx.showToast({
+                title: '请选择借阅日期',
+                icon: 'none',
+            });
+            return;
+        }
+
+        if (!returnDate) {
+            wx.showToast({
+                title: '请选择归还日期',
+                icon: 'none',
+            });
+            return;
+        }
+
+        if (!form.borrowDays || form.borrowDays <= 0) {
+            wx.showToast({
+                title: '请选择借阅天数',
                 icon: 'none',
             });
             return;
@@ -401,9 +470,13 @@ Page({
                 console.warn('订阅消息授权失败，继续提交申请:', subscribeError);
             }
 
-            // 提交表单数据，借阅日期和归还日期会通过borrowDays计算
-            // 实际存储时会由后端或本地存储逻辑处理
-            const result = await submitBorrowRequest(form);
+            // 提交表单数据，包含借阅日期和归还日期
+            const submitForm = {
+                ...form,
+                borrowDate: borrowDate,
+                returnDate: returnDate,
+            };
+            const result = await submitBorrowRequest(submitForm);
 
             if (result.success) {
                 console.log('借阅申请提交成功');
