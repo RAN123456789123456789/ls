@@ -11,7 +11,6 @@ export interface UserInfo {
     nickName?: string;
     avatarUrl?: string;
     phoneNumber?: string;
-    studentId?: string;
     department?: string;
     email?: string;
     createdAt?: string;
@@ -26,7 +25,6 @@ export interface DBUserInfo {
     nickName?: string;
     avatarUrl?: string;
     phoneNumber?: string;
-    studentId?: string;
     department?: string;
     email?: string;
     createdAt?: string;
@@ -196,7 +194,6 @@ export async function saveUserToDatabase(userInfo: UserInfo): Promise<{ success:
                 if (userInfo.nickName) updateData.nickName = userInfo.nickName;
                 if (userInfo.avatarUrl) updateData.avatarUrl = userInfo.avatarUrl;
                 if (userInfo.phoneNumber) updateData.phoneNumber = userInfo.phoneNumber;
-                if (userInfo.studentId) updateData.studentId = userInfo.studentId;
                 if (userInfo.department) updateData.department = userInfo.department;
                 if (userInfo.email) updateData.email = userInfo.email;
 
@@ -219,7 +216,6 @@ export async function saveUserToDatabase(userInfo: UserInfo): Promise<{ success:
                     nickName: userInfo.nickName || '',
                     avatarUrl: userInfo.avatarUrl || '',
                     phoneNumber: userInfo.phoneNumber || '',
-                    studentId: userInfo.studentId || '',
                     department: userInfo.department || '',
                     email: userInfo.email || '',
                     createdAt: now,
@@ -297,7 +293,6 @@ export async function userLogin(userProfile?: WechatMiniprogram.UserInfo, phoneN
         // 从本地存储获取其他信息
         const localUserInfo = wx.getStorageSync('user_info');
         if (localUserInfo) {
-            userInfo.studentId = localUserInfo.studentId;
             userInfo.department = localUserInfo.department;
             userInfo.email = localUserInfo.email;
         }
@@ -454,10 +449,14 @@ export function isUserLoggedIn(): boolean {
  * @returns 解密后的手机号
  */
 export async function decryptPhoneNumber(
-    encryptedData: string,
-    iv: string
+    codeOrEncryptedData: string,
+    ivOrCode?: string
 ): Promise<{ success: boolean; phoneNumber?: string; message?: string }> {
     try {
+        // 判断是新版本（code）还是旧版本（encryptedData）
+        // code通常较短（<100字符），encryptedData通常很长（>200字符）
+        const isNewVersion = codeOrEncryptedData && codeOrEncryptedData.length < 100 && !ivOrCode;
+
         // 如果 API 未配置，生成模拟手机号用于开发测试
         if (API_BASE_URL === 'https://your-api-domain.com/api') {
             console.log('API未配置，使用模拟手机号');
@@ -467,8 +466,6 @@ export async function decryptPhoneNumber(
 
             // 保存到本地存储
             wx.setStorageSync('phoneNumber', phoneNumber);
-            wx.setStorageSync('phoneEncryptedData', encryptedData);
-            wx.setStorageSync('phoneIv', iv);
 
             return {
                 success: true,
@@ -485,27 +482,43 @@ export async function decryptPhoneNumber(
             };
         }
 
+        // 准备请求数据
+        const requestData: any = {
+            openId,
+        };
+
+        if (isNewVersion) {
+            // 新版本：使用code
+            requestData.code = codeOrEncryptedData;
+            console.log('使用新版本手机号授权API（code）');
+        } else {
+            // 旧版本：使用encryptedData和iv
+            requestData.encryptedData = codeOrEncryptedData;
+            requestData.iv = ivOrCode;
+            console.log('使用旧版本手机号授权API（encryptedData + iv）');
+        }
+
         // 调用后端API解密手机号
         const res = await new Promise<any>((resolve, reject) => {
             wx.request({
                 url: `${API_BASE_URL}/user/decryptPhone`,
                 method: 'POST',
-                data: {
-                    openId,
-                    encryptedData,
-                    iv,
-                },
+                data: requestData,
                 header: {
                     'content-type': 'application/json',
                 },
                 success: (res) => {
+                    console.log('解密手机号API响应:', res);
                     if (res.statusCode === 200) {
                         resolve(res.data);
                     } else {
                         reject(new Error(`请求失败: ${res.statusCode}`));
                     }
                 },
-                fail: reject,
+                fail: (err) => {
+                    console.error('请求失败:', err);
+                    reject(err);
+                },
             });
         });
 
@@ -525,14 +538,20 @@ export async function decryptPhoneNumber(
     } catch (error: any) {
         console.error('解密手机号失败:', error);
 
-        // 开发测试：生成模拟手机号
-        const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-        const phoneNumber = `138****${randomSuffix}`;
-        wx.setStorageSync('phoneNumber', phoneNumber);
+        // 开发测试：生成模拟手机号（仅在开发环境）
+        if (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1')) {
+            const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            const phoneNumber = `138****${randomSuffix}`;
+            wx.setStorageSync('phoneNumber', phoneNumber);
+            return {
+                success: true,
+                phoneNumber: phoneNumber,
+            };
+        }
 
         return {
-            success: true,
-            phoneNumber: phoneNumber,
+            success: false,
+            message: error.message || '解密手机号失败，请重试',
         };
     }
 }
@@ -718,7 +737,6 @@ export async function updateUserProfile(
                     nickName: nickName || '',
                     avatarUrl: avatarUrl || '',
                     phoneNumber: '',
-                    studentId: '',
                     department: '',
                     email: '',
                     createdAt: getBeijingTimeISOString(),

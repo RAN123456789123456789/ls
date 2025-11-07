@@ -10,12 +10,15 @@ Page({
             avatarUrl: '',
         },
         phoneNumber: '',
-        studentId: '',
         department: '',
         email: '',
         loading: false,
         showEditNameModal: false,
         editNickName: '',
+        tempAvatarUrl: '', // 临时头像URL（用于登录时）
+        tempNickName: '', // 临时昵称（用于登录时）
+        showPhoneInputModal: false, // 是否显示手机号输入弹窗
+        inputPhoneNumber: '', // 输入的手机号
     },
 
     onLoad() {
@@ -43,7 +46,6 @@ Page({
                         avatarUrl: '',
                     },
                     phoneNumber: '',
-                    studentId: '',
                     department: '',
                     email: '',
                 });
@@ -75,7 +77,6 @@ Page({
                                 avatarUrl: avatarUrl,
                             },
                             phoneNumber: userData.phoneNumber || '',
-                            studentId: userData.studentId || '',
                             department: userData.department || '',
                             email: userData.email || '',
                         });
@@ -108,7 +109,6 @@ Page({
                             avatarUrl: '',
                         },
                         phoneNumber: '',
-                        studentId: '',
                         department: '',
                         email: '',
                     });
@@ -122,7 +122,6 @@ Page({
                         avatarUrl: '',
                     },
                     phoneNumber: '',
-                    studentId: '',
                     department: '',
                     email: '',
                 });
@@ -133,172 +132,105 @@ Page({
     },
 
     /**
-     * 微信一键登录
+     * 选择头像（直接触发微信原生头像选择器）
+     * 选择头像后自动使用默认昵称"微信用户"完成登录
      */
-    handleWechatLogin() {
-        console.log('点击微信一键登录');
+    async onChooseAvatar(e: any) {
+        // 处理用户取消选择的情况
+        if (!e || !e.detail || !e.detail.avatarUrl) {
+            console.log('用户取消了头像选择');
+            return;
+        }
 
-        // 先询问用户是否使用微信头像
-        wx.showModal({
-            title: '使用微信头像',
-            content: '是否授权使用您的微信头像和昵称？\n\n选择"使用"将获取微信头像\n选择"不使用"将使用默认头像',
-            confirmText: '使用',  // 不超过4个中文字符
-            cancelText: '不使用',  // 不超过4个中文字符
-            showCancel: true,
-            success: (modalRes) => {
-                console.log('对话框用户选择:', modalRes.confirm ? '使用微信头像' : '使用默认头像');
+        const { avatarUrl } = e.detail;
+        console.log('选择头像:', avatarUrl);
 
-                // 用户做出选择后再设置loading状态
-                this.setData({ loading: true });
+        // 使用默认昵称"微信用户"
+        const defaultNickName = '微信用户';
 
-                if (modalRes.confirm) {
-                    // 用户同意使用微信头像，立即获取用户信息授权（必须在用户点击事件中调用）
-                    this.getUserProfileWithAvatar();
-                } else {
-                    // 用户选择使用默认头像，立即获取昵称（必须在用户点击事件中调用）
-                    this.getUserProfileWithoutAvatar();
-                }
-            },
-            fail: (err) => {
-                console.error('显示对话框失败:', err);
-                // 对话框失败，默认使用微信头像
-                this.setData({ loading: true });
-                this.getUserProfileWithAvatar();
-            },
-        });
-    },
+        console.log('开始登录，头像:', avatarUrl, '昵称:', defaultNickName);
 
-    /**
-     * 获取用户信息（使用微信头像）
-     */
-    getUserProfileWithAvatar() {
-        wx.getUserProfile({
-            desc: '用于完善用户信息',
-            success: async (res) => {
-                console.log('获取用户信息成功:', res);
+        this.setData({ loading: true });
 
-                // 登录并保存到数据库
-                const loginResult = await userLogin(res.userInfo);
+        try {
+            // 如果头像需要上传到云存储，先上传
+            let finalAvatarUrl = avatarUrl;
+            const openId = await getUserOpenId();
 
-                if (loginResult.success) {
-                    // 设置明确的登录标志
-                    wx.setStorageSync('is_user_logged_in', true);
+            if (openId && avatarUrl && !avatarUrl.startsWith('http')) {
+                // 如果是本地临时路径，上传到云存储
+                wx.showLoading({
+                    title: '上传头像中...',
+                    mask: true,
+                });
 
-                    // 更新页面数据
-                    this.setData({
-                        isLoggedIn: true,
-                        userInfo: res.userInfo,
-                    });
+                const uploadResult = await uploadAvatarToCloud(avatarUrl, openId);
+                wx.hideLoading();
 
-                    wx.showToast({
-                        title: '登录成功',
-                        icon: 'success',
-                    });
-
-                    // 刷新用户信息
-                    await this.checkLoginStatus();
+                if (uploadResult.success && uploadResult.fileID) {
+                    // 获取可访问的头像URL
+                    finalAvatarUrl = uploadResult.tempFileURL || uploadResult.fileID;
+                    if (finalAvatarUrl.startsWith('cloud://')) {
+                        finalAvatarUrl = await getAvatarURL(finalAvatarUrl);
+                    }
                 } else {
                     wx.showToast({
-                        title: loginResult.message || '登录失败',
+                        title: uploadResult.message || '头像上传失败',
                         icon: 'none',
                     });
+                    this.setData({ loading: false });
+                    return;
                 }
-                this.setData({ loading: false });
-            },
-            fail: (err) => {
-                console.error('获取用户信息失败:', err);
+            }
+
+            // 创建用户信息对象
+            const userInfo: WechatMiniprogram.UserInfo = {
+                nickName: defaultNickName,
+                avatarUrl: finalAvatarUrl,
+                country: '',
+                province: '',
+                city: '',
+                language: '',
+                gender: 0,
+            };
+
+            // 登录并保存到数据库
+            const loginResult = await userLogin(userInfo);
+
+            if (loginResult.success) {
+                // 设置明确的登录标志
+                wx.setStorageSync('is_user_logged_in', true);
+
+                // 更新页面数据
+                this.setData({
+                    isLoggedIn: true,
+                    userInfo: userInfo,
+                    tempAvatarUrl: '',
+                    tempNickName: '',
+                });
+
                 wx.showToast({
-                    title: '授权失败',
+                    title: '登录成功',
+                    icon: 'success',
+                });
+
+                // 刷新用户信息
+                await this.checkLoginStatus();
+            } else {
+                wx.showToast({
+                    title: loginResult.message || '登录失败',
                     icon: 'none',
                 });
-                this.setData({ loading: false });
-            },
-        });
-    },
-
-    /**
-     * 获取用户信息（不使用微信头像，使用默认头像）
-     */
-    getUserProfileWithoutAvatar() {
-        wx.getUserProfile({
-            desc: '用于完善用户信息',
-            success: async (res) => {
-                console.log('获取用户信息成功（不使用头像）:', res);
-
-                // 创建用户信息，但使用默认头像
-                const userInfoWithoutAvatar: WechatMiniprogram.UserInfo = {
-                    nickName: res.userInfo.nickName,
-                    avatarUrl: 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0', // 默认头像
-                    country: res.userInfo.country,
-                    province: res.userInfo.province,
-                    city: res.userInfo.city,
-                    language: res.userInfo.language,
-                    gender: res.userInfo.gender,
-                };
-
-                // 登录并保存到数据库
-                const loginResult = await userLogin(userInfoWithoutAvatar);
-
-                if (loginResult.success) {
-                    // 设置明确的登录标志
-                    wx.setStorageSync('is_user_logged_in', true);
-
-                    // 更新页面数据
-                    this.setData({
-                        isLoggedIn: true,
-                        userInfo: userInfoWithoutAvatar,
-                    });
-
-                    wx.showToast({
-                        title: '登录成功',
-                        icon: 'success',
-                    });
-
-                    // 刷新用户信息
-                    await this.checkLoginStatus();
-                } else {
-                    wx.showToast({
-                        title: loginResult.message || '登录失败',
-                        icon: 'none',
-                    });
-                }
-                this.setData({ loading: false });
-            },
-            fail: (err) => {
-                console.error('获取用户信息失败:', err);
-                // 如果获取昵称也失败，使用默认信息登录
-                const defaultUserInfo: WechatMiniprogram.UserInfo = {
-                    nickName: '微信用户',
-                    avatarUrl: 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0',
-                    country: '',
-                    province: '',
-                    city: '',
-                    language: '',
-                    gender: 0,
-                };
-
-                userLogin(defaultUserInfo).then((loginResult) => {
-                    if (loginResult.success) {
-                        wx.setStorageSync('is_user_logged_in', true);
-                        this.setData({
-                            isLoggedIn: true,
-                            userInfo: defaultUserInfo,
-                        });
-                        wx.showToast({
-                            title: '登录成功',
-                            icon: 'success',
-                        });
-                        this.checkLoginStatus();
-                    } else {
-                        wx.showToast({
-                            title: '登录失败',
-                            icon: 'none',
-                        });
-                    }
-                    this.setData({ loading: false });
-                });
-            },
-        });
+            }
+        } catch (error: any) {
+            console.error('登录失败:', error);
+            wx.showToast({
+                title: error.message || '登录失败',
+                icon: 'none',
+            });
+        } finally {
+            this.setData({ loading: false });
+        }
     },
 
     /**
@@ -318,7 +250,6 @@ Page({
                             avatarUrl: '',
                         },
                         phoneNumber: '',
-                        studentId: '',
                         department: '',
                         email: '',
                     });
@@ -341,13 +272,11 @@ Page({
     },
 
     /**
-     * 编辑资料（暂时保留，可以扩展其他编辑功能）
+     * 编辑资料 - 跳转到编辑资料页面
      */
     handleEditProfile() {
-        wx.showToast({
-            title: '点击头像或昵称可编辑',
-            icon: 'none',
-            duration: 2000,
+        wx.navigateTo({
+            url: '/pages/editProfile/editProfile',
         });
     },
 
@@ -559,65 +488,79 @@ Page({
         try {
             const { errMsg, code, encryptedData, iv } = e.detail;
 
-            if (errMsg === 'getPhoneNumber:ok' && code) {
+            console.log('手机号授权回调:', { errMsg, code, encryptedData: encryptedData ? '有' : '无', iv: iv ? '有' : '无' });
+
+            if (errMsg === 'getPhoneNumber:ok') {
                 wx.showLoading({
                     title: '绑定中...',
                     mask: true,
                 });
 
-                // 解密手机号
-                const decryptResult = await decryptPhoneNumber(
-                    encryptedData,
-                    iv
-                );
+                try {
+                    // 解密手机号（优先使用code，新版本API）
+                    // 如果code存在，使用新版本API；否则使用旧版本API（encryptedData + iv）
+                    const decryptResult = await decryptPhoneNumber(
+                        code || encryptedData || '', // 新版本使用code，旧版本使用encryptedData
+                        code ? undefined : iv // 新版本不需要iv，旧版本需要iv
+                    );
 
-                wx.hideLoading();
+                    wx.hideLoading();
 
-                if (decryptResult.success && decryptResult.phoneNumber) {
-                    // 更新用户信息到数据库
-                    const openId = await getUserOpenId();
-                    if (openId) {
-                        const db = (wx.cloud && wx.cloud.database) ? wx.cloud.database() : null;
-                        if (db) {
-                            try {
-                                const userCollection = db.collection('user');
-                                const queryResult = await userCollection.where({
-                                    openId: openId
-                                }).get();
+                    if (decryptResult.success && decryptResult.phoneNumber) {
+                        // 更新用户信息到数据库
+                        const openId = await getUserOpenId();
+                        if (openId) {
+                            const db = (wx.cloud && wx.cloud.database) ? wx.cloud.database() : null;
+                            if (db) {
+                                try {
+                                    const userCollection = db.collection('user');
+                                    const queryResult = await userCollection.where({
+                                        openId: openId
+                                    }).get();
 
-                                if (queryResult.data && queryResult.data.length > 0) {
-                                    await userCollection.doc(queryResult.data[0]._id).update({
-                                        data: {
-                                            phoneNumber: decryptResult.phoneNumber,
-                                            updatedAt: getBeijingTimeISOString(),
-                                        }
-                                    });
+                                    if (queryResult.data && queryResult.data.length > 0) {
+                                        await userCollection.doc(queryResult.data[0]._id).update({
+                                            data: {
+                                                phoneNumber: decryptResult.phoneNumber,
+                                                updatedAt: getBeijingTimeISOString(),
+                                            }
+                                        });
+                                    }
+                                } catch (dbError) {
+                                    console.warn('更新数据库失败:', dbError);
                                 }
-                            } catch (dbError) {
-                                console.warn('更新数据库失败:', dbError);
                             }
                         }
+
+                        // 更新本地显示
+                        this.setData({
+                            phoneNumber: decryptResult.phoneNumber,
+                        });
+
+                        // 保存到本地存储
+                        wx.setStorageSync('phoneNumber', decryptResult.phoneNumber);
+
+                        wx.showToast({
+                            title: '手机号绑定成功',
+                            icon: 'success',
+                        });
+
+                        // 刷新用户信息
+                        await this.checkLoginStatus();
+                    } else {
+                        wx.showToast({
+                            title: decryptResult.message || '绑定失败',
+                            icon: 'none',
+                            duration: 2000,
+                        });
                     }
-
-                    // 更新本地显示
-                    this.setData({
-                        phoneNumber: decryptResult.phoneNumber,
-                    });
-
-                    // 保存到本地存储
-                    wx.setStorageSync('phoneNumber', decryptResult.phoneNumber);
-
+                } catch (error: any) {
+                    wx.hideLoading();
+                    console.error('解密手机号失败:', error);
                     wx.showToast({
-                        title: '手机号绑定成功',
-                        icon: 'success',
-                    });
-
-                    // 刷新用户信息
-                    await this.checkLoginStatus();
-                } else {
-                    wx.showToast({
-                        title: decryptResult.message || '绑定失败',
+                        title: error.message || '绑定失败，请重试',
                         icon: 'none',
+                        duration: 2000,
                     });
                 }
             } else if (errMsg === 'getPhoneNumber:fail user deny') {
@@ -625,10 +568,26 @@ Page({
                     title: '用户拒绝授权',
                     icon: 'none',
                 });
+            } else if (errMsg === 'getPhoneNumber:fail no permission' || errMsg.includes('no permission')) {
+                // 没有权限，提示用户手动输入
+                console.warn('手机号授权权限不足:', errMsg);
+                wx.showModal({
+                    title: '⚠️ 无法使用手机号授权',
+                    content: '当前小程序没有手机号授权权限。\n\n可能原因：\n1. 个人开发者小程序无法使用此功能\n2. 未在微信公众平台开通手机号授权权限\n3. 小程序未发布（需要体验版或正式版）\n\n解决方案：\n• 登录微信公众平台（mp.weixin.qq.com）\n• 开发 → 开发管理 → 接口设置\n• 开通"手机号快速验证组件"\n\n是否先手动输入手机号？',
+                    confirmText: '手动输入',
+                    cancelText: '取消',
+                    success: (res) => {
+                        if (res.confirm) {
+                            this.showManualPhoneInput();
+                        }
+                    },
+                });
             } else {
+                console.error('手机号授权失败:', errMsg);
                 wx.showToast({
-                    title: '授权失败，请重试',
+                    title: `授权失败: ${errMsg}`,
                     icon: 'none',
+                    duration: 3000,
                 });
             }
         } catch (error: any) {
@@ -636,6 +595,118 @@ Page({
             console.error('设置手机号失败:', error);
             wx.showToast({
                 title: error.message || '操作失败',
+                icon: 'none',
+            });
+        }
+    },
+
+    /**
+     * 显示手动输入手机号弹窗
+     */
+    showManualPhoneInput() {
+        this.setData({
+            showPhoneInputModal: true,
+            inputPhoneNumber: this.data.phoneNumber || '',
+        });
+    },
+
+    /**
+     * 关闭手机号输入弹窗
+     */
+    closePhoneInputModal() {
+        this.setData({
+            showPhoneInputModal: false,
+            inputPhoneNumber: '',
+        });
+    },
+
+    /**
+     * 手机号输入
+     */
+    onPhoneNumberInput(e: any) {
+        const phoneNumber = e.detail.value.replace(/\D/g, ''); // 只保留数字
+        this.setData({
+            inputPhoneNumber: phoneNumber,
+        });
+    },
+
+    /**
+     * 确认手动输入手机号
+     */
+    async confirmManualPhoneNumber() {
+        const phoneNumber = this.data.inputPhoneNumber.trim();
+
+        // 验证手机号格式
+        if (!phoneNumber) {
+            wx.showToast({
+                title: '请输入手机号',
+                icon: 'none',
+            });
+            return;
+        }
+
+        if (!/^1[3-9]\d{9}$/.test(phoneNumber)) {
+            wx.showToast({
+                title: '请输入正确的手机号',
+                icon: 'none',
+            });
+            return;
+        }
+
+        try {
+            wx.showLoading({
+                title: '保存中...',
+                mask: true,
+            });
+
+            // 更新用户信息到数据库
+            const openId = await getUserOpenId();
+            if (openId) {
+                const db = (wx.cloud && wx.cloud.database) ? wx.cloud.database() : null;
+                if (db) {
+                    try {
+                        const userCollection = db.collection('user');
+                        const queryResult = await userCollection.where({
+                            openId: openId
+                        }).get();
+
+                        if (queryResult.data && queryResult.data.length > 0) {
+                            await userCollection.doc(queryResult.data[0]._id).update({
+                                data: {
+                                    phoneNumber: phoneNumber,
+                                    updatedAt: getBeijingTimeISOString(),
+                                }
+                            });
+                        }
+                    } catch (dbError) {
+                        console.warn('更新数据库失败:', dbError);
+                    }
+                }
+            }
+
+            // 更新本地显示
+            this.setData({
+                phoneNumber: phoneNumber,
+                showPhoneInputModal: false,
+                inputPhoneNumber: '',
+            });
+
+            // 保存到本地存储
+            wx.setStorageSync('phoneNumber', phoneNumber);
+
+            wx.hideLoading();
+            wx.showToast({
+                title: '手机号保存成功',
+                icon: 'success',
+            });
+
+            // 刷新用户信息
+            await this.checkLoginStatus();
+        } catch (error: any) {
+            wx.hideLoading();
+            console.error('保存手机号失败:', error);
+            wx.showToast({
+                title: error.message || '保存失败',
                 icon: 'none',
             });
         }

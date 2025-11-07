@@ -2,7 +2,11 @@
 import { getAllBorrowRequests, reviewBorrowRequest, confirmBorrow, confirmReturn, BorrowRequestRecord, BorrowRequestStatus } from '../../utils/borrowRequestService';
 import { isAdmin } from '../../utils/adminService';
 import { getBeijingTime, formatDate } from '../../utils/util';
-import { sendReturnSuccessNotification } from '../../utils/subscribeService';
+import {
+    sendBorrowSuccessNotification,
+    sendReturnSuccessNotification,
+    sendOverdueReminderNotification
+} from '../../utils/subscribeService';
 import { getUserOpenId } from '../../utils/userService';
 
 Page({
@@ -36,6 +40,61 @@ Page({
     },
 
     /**
+     * 检查并发送逾期提醒
+     */
+    async checkAndSendOverdueReminders(requests: BorrowRequestRecord[]) {
+        const today = getBeijingTime();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = formatDate(today);
+
+        // 检查所有已借出但未归还的记录
+        const borrowedRecords = requests.filter(r =>
+            r.status === BorrowRequestStatus.BORROWED &&
+            r.returnDate
+        );
+
+        for (const record of borrowedRecords) {
+            if (!record.returnDate) continue;
+
+            const returnDate = new Date(record.returnDate);
+            returnDate.setHours(0, 0, 0, 0);
+
+            // 检查是否已过期
+            if (returnDate < today) {
+                const overdueDays = Math.floor((today.getTime() - returnDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                if (overdueDays > 0) {
+                    // 检查今天是否已发送过逾期提醒
+                    const reminderKey = `admin_${record.id}_overdue_${todayStr}`;
+                    const sentReminders = wx.getStorageSync('sent_overdue_reminders') || {};
+
+                    if (!sentReminders[reminderKey]) {
+                        // 发送逾期提醒（不请求权限，后台发送）
+                        try {
+                            await sendOverdueReminderNotification(
+                                record.openId,
+                                record.bookName,
+                                record.returnDate,
+                                overdueDays,
+                                record.id,
+                                'pages/myBorrows/myBorrows',
+                                false // 不请求权限，后台发送
+                            );
+
+                            // 记录已发送
+                            sentReminders[reminderKey] = true;
+                            wx.setStorageSync('sent_overdue_reminders', sentReminders);
+                            console.log(`已发送逾期提醒: ${record.bookName}, 逾期${overdueDays}天`);
+                        } catch (err: any) {
+                            console.warn(`发送逾期提醒失败: ${record.bookName}`, err);
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    /**
      * 加载借阅申请列表（从message集合同步）
      */
     async loadRequests() {
@@ -62,6 +121,9 @@ Page({
                     returned: formattedRequests.filter(r => r.status === 'returned').length,
                     rejected: formattedRequests.filter(r => r.status === 'rejected').length,
                 });
+
+                // 检查并发送逾期提醒
+                await this.checkAndSendOverdueReminders(formattedRequests);
 
                 // 同时设置筛选后的列表
                 const filtered = this.getFilteredRequestsFromData(formattedRequests, this.data.currentTab);
@@ -227,6 +289,49 @@ Page({
                             const result = await reviewBorrowRequest(requestid, action);
 
                             if (result.success) {
+                                // 如果通过申请，发送订阅消息通知用户
+                                if (action === 'approve' && result.data) {
+                                    const approvedRequest = result.data;
+                                    const userOpenId = approvedRequest.openId;
+
+                                    // 格式化借阅日期和归还日期
+                                    let borrowDateStr = '';
+                                    let returnDateStr = '';
+
+                                    if (approvedRequest.borrowDate) {
+                                        borrowDateStr = approvedRequest.borrowDate;
+                                    } else {
+                                        borrowDateStr = formatDate(getBeijingTime());
+                                    }
+
+                                    if (approvedRequest.returnDate) {
+                                        returnDateStr = approvedRequest.returnDate;
+                                    } else {
+                                        // 如果没有归还日期，根据借阅天数计算
+                                        const borrowDays = approvedRequest.borrowDays || 7;
+                                        const returnDate = new Date(getBeijingTime());
+                                        returnDate.setDate(returnDate.getDate() + borrowDays);
+                                        returnDateStr = formatDate(returnDate);
+                                    }
+
+                                    // 发送借阅成功通知（通过申请后，用户已可以借阅）
+                                    try {
+                                        await sendBorrowSuccessNotification(
+                                            userOpenId,
+                                            approvedRequest.bookName,
+                                            borrowDateStr,
+                                            returnDateStr,
+                                            approvedRequest.id,
+                                            'pages/myBorrows/myBorrows',
+                                            false // 不请求权限，后台发送
+                                        );
+                                        console.log('已发送通过申请通知');
+                                    } catch (subscribeError: any) {
+                                        console.warn('发送通过申请通知失败:', subscribeError);
+                                        // 订阅消息发送失败不影响操作
+                                    }
+                                }
+
                                 wx.hideLoading();
                                 wx.showToast({
                                     title: result.message || '已通过申请',
@@ -272,7 +377,6 @@ Page({
         if (request.name) content += `借阅人姓名：${request.name}\n`;
         if (request.phone) content += `电话：${request.phone}\n`;
         if (request.email) content += `邮箱：${request.email}\n`;
-        if (request.studentId) content += `学号/工号：${request.studentId}\n`;
         if (request.department) content += `部门/院系：${request.department}\n`;
         if (request.reason) content += `借阅事由：${request.reason}\n`;
         if (request.remark) content += `备注：${request.remark}\n`;
@@ -335,6 +439,47 @@ Page({
                         const result = await confirmBorrow(requestId, returnDateStr);
 
                         if (result.success) {
+                            // 发送借阅成功订阅消息
+                            if (result.data) {
+                                const borrowRecord = result.data;
+                                const userOpenId = borrowRecord.openId;
+
+                                // 格式化借阅日期和归还日期
+                                let borrowDateStr = '';
+                                let finalReturnDateStr = returnDateStr; // 使用传入的归还日期
+
+                                if (borrowRecord.borrowTime) {
+                                    const borrowTime = new Date(borrowRecord.borrowTime);
+                                    borrowDateStr = formatDate(borrowTime);
+                                } else if (borrowRecord.borrowDate) {
+                                    borrowDateStr = borrowRecord.borrowDate;
+                                } else {
+                                    borrowDateStr = formatDate(getBeijingTime());
+                                }
+
+                                // 优先使用记录中的归还日期，否则使用传入的归还日期
+                                if (borrowRecord.returnDate) {
+                                    finalReturnDateStr = borrowRecord.returnDate;
+                                }
+
+                                // 发送订阅消息（不请求权限，后台发送）
+                                try {
+                                    await sendBorrowSuccessNotification(
+                                        userOpenId,
+                                        borrowRecord.bookName,
+                                        borrowDateStr,
+                                        finalReturnDateStr,
+                                        borrowRecord.id,
+                                        'pages/myBorrows/myBorrows',
+                                        false // 不请求权限，后台发送
+                                    );
+                                    console.log('已发送借阅成功通知');
+                                } catch (subscribeError: any) {
+                                    console.warn('发送借阅成功通知失败:', subscribeError);
+                                    // 订阅消息发送失败不影响操作
+                                }
+                            }
+
                             wx.hideLoading();
                             wx.showToast({
                                 title: result.message || '借出确认成功',
@@ -406,7 +551,7 @@ Page({
                                     returnDateStr = formatDate(getBeijingTime());
                                 }
 
-                                // 发送订阅消息（会自动从底部弹出权限请求窗口）
+                                // 发送订阅消息（不请求权限，后台发送）
                                 try {
                                     await sendReturnSuccessNotification(
                                         userOpenId,
@@ -414,8 +559,9 @@ Page({
                                         returnDateStr,
                                         returnRecord.id,
                                         'pages/myBorrows/myBorrows',
-                                        true // 请求权限（从底部弹出）
+                                        false // 不请求权限，后台发送
                                     );
+                                    console.log('已发送归还成功通知');
                                 } catch (subscribeError: any) {
                                     console.warn('发送归还成功通知失败:', subscribeError);
                                     // 订阅消息发送失败不影响归还确认

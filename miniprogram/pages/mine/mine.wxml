@@ -6,9 +6,12 @@
       <view class="login-icon">👤</view>
       <text class="login-title">欢迎使用图书借阅系统</text>
       <text class="login-desc">请先登录以使用完整功能</text>
+      
+      <!-- 登录按钮：直接触发微信原生头像选择 -->
       <button 
         class="login-btn" 
-        bindtap="handleWechatLogin"
+        open-type="chooseAvatar"
+        bind:chooseavatar="onChooseAvatar"
         disabled="{{loading}}"
         loading="{{loading}}"
       >
@@ -36,12 +39,19 @@
           </view>
           <view class="phone-wrapper">
             <text class="user-id" wx:if="{{phoneNumber}}">{{phoneNumber}}</text>
+            <text class="user-id-placeholder" wx:else>未绑定手机号</text>
             <button 
               class="phone-setting-btn" 
               open-type="getPhoneNumber"
               bindgetphonenumber="handleSetPhoneNumber"
             >
-              <text class="phone-setting-icon">📱</text>
+              <text class="phone-setting-text">绑定</text>
+            </button>
+            <button 
+              class="phone-setting-btn manual-btn" 
+              bindtap="showManualPhoneInput"
+            >
+              <text class="phone-setting-text">手动输入</text>
             </button>
           </view>
         </view>
@@ -86,11 +96,28 @@
     </view>
   </scroll-view>
 
-  <!-- 管理员登录入口（未登录状态也显示） -->
-  <view class="admin-section" wx:if="{{!isLoggedIn}}">
-    <view class="admin-divider">
-      <text class="divider-text">或</text>
+  <!-- 手机号输入弹窗 -->
+  <view class="modal" wx:if="{{showPhoneInputModal}}" bindtap="closePhoneInputModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">输入手机号</text>
+        <text class="modal-close" bindtap="closePhoneInputModal">✕</text>
+      </view>
+      <view class="modal-body">
+        <input 
+          class="name-input" 
+          type="number" 
+          placeholder="请输入11位手机号" 
+          value="{{inputPhoneNumber}}"
+          bindinput="onPhoneNumberInput"
+          maxlength="11"
+        />
+        <text class="input-hint">请输入11位手机号码</text>
+      </view>
+      <view class="modal-footer">
+        <button class="modal-btn cancel-btn" bindtap="closePhoneInputModal">取消</button>
+        <button class="modal-btn confirm-btn" bindtap="confirmManualPhoneNumber">确定</button>
+      </view>
     </view>
-    <button class="admin-btn-outline" bindtap="goToAdminLogin">管理员登录</button>
   </view>
 </view>

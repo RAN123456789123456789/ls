@@ -1,5 +1,5 @@
 <!--pages/borrowForm/borrowForm.wxml-->
-<scroll-view class="container" scroll-y>
+<scroll-view class="container" scroll-y enable-flex>
   <view class="form-content">
     <!-- 授权弹窗 -->
     <view class="auth-modal" wx:if="{{showAuthModal}}">
@@ -57,17 +57,6 @@
           value="{{form.phone}}"
           bindinput="onInputChange"
           data-field="phone"
-        />
-      </view>
-
-      <view class="form-item">
-        <text class="form-label">学号/工号</text>
-        <input 
-          class="form-input" 
-          placeholder="请输入学号或工号"
-          value="{{form.studentId}}"
-          bindinput="onInputChange"
-          data-field="studentId"
         />
       </view>
 

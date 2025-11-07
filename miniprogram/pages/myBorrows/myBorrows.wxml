@@ -6,7 +6,6 @@
 
   <view wx:elif="{{records.length === 0}}" class="empty">
     <text>暂无借阅记录</text>
-    <button class="goto-books-btn" bindtap="goToBooks">去借书</button>
   </view>
 
   <scroll-view 

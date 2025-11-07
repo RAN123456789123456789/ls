@@ -58,25 +58,92 @@ page {
 .login-desc {
   font-size: 28rpx;
   color: #8e8e93;
-  margin-bottom: 72rpx;
+  margin-bottom: 60rpx;
   line-height: 1.5;
+}
+
+/* 头像选择区域 */
+.avatar-select-section {
+  width: 100%;
+  margin-bottom: 48rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.avatar-select-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.avatar-select-btn::after {
+  border: none;
+}
+
+.avatar-preview {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  border: 4rpx solid #e0e0e0;
+  margin-bottom: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+}
+
+.avatar-hint {
+  font-size: 26rpx;
+  color: #8e8e93;
+}
+
+/* 昵称输入区域 */
+.nickname-input-section {
+  width: 100%;
+  margin-bottom: 48rpx;
+}
+
+.nickname-label {
+  display: block;
+  font-size: 28rpx;
+  color: #1a1a1a;
+  margin-bottom: 16rpx;
+  font-weight: 500;
+}
+
+.nickname-input {
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  color: #1a1a1a;
+  border: 2rpx solid transparent;
+}
+
+.nickname-input:focus {
+  background: #ffffff;
+  border-color: #667eea;
 }
 
 .login-btn {
   width: 100%;
   height: 96rpx;
   line-height: 96rpx;
-  background: #ffffff;
-  color: #1a1a1a;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
   border-radius: 48rpx;
   font-size: 32rpx;
   font-weight: 600;
-  border: 1rpx solid #e0e0e0;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  border: none;
+  box-shadow: 0 4rpx 16rpx rgba(102, 126, 234, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12rpx;
+  margin-bottom: 24rpx;
 }
 
 .login-btn::after {
@@ -88,6 +155,8 @@ page {
   color: #8e8e93;
   box-shadow: none;
 }
+
+
 
 /* 已登录状态 */
 .user-section {
@@ -176,6 +245,12 @@ page {
   line-height: 1.4;
 }
 
+.user-id-placeholder {
+  font-size: 26rpx;
+  color: #c7c7cc;
+  line-height: 1.4;
+}
+
 .phone-setting-btn {
   padding: 0;
   margin: 0;
@@ -195,6 +270,26 @@ page {
   font-size: 32rpx;
   opacity: 0.6;
   line-height: 1;
+}
+
+.phone-setting-text {
+  font-size: 26rpx;
+  color: #667eea;
+  padding: 8rpx 16rpx;
+  border: 1rpx solid #667eea;
+  border-radius: 8rpx;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.phone-setting-btn.manual-btn {
+  margin-left: 16rpx;
+}
+
+.input-hint {
+  font-size: 24rpx;
+  color: #8e8e93;
+  margin-top: 16rpx;
+  display: block;
 }
 
 /* 编辑区域 */

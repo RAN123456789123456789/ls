@@ -18,7 +18,6 @@ Page({
             name: '',
             phone: '',
             email: '',
-            studentId: '',
             department: '',
             reason: '',
             remark: '',

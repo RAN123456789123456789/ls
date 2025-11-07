@@ -73,17 +73,6 @@
       </view>
 
       <view class="form-item">
-        <text class="form-label">学号/工号</text>
-        <input 
-          class="form-input" 
-          placeholder="请输入学号或工号"
-          value="{{form.studentId}}"
-          bindinput="onInputChange"
-          data-field="studentId"
-        />
-      </view>
-
-      <view class="form-item">
         <text class="form-label">部门/院系</text>
         <input 
           class="form-input" 

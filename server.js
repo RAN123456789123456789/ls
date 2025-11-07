@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+const crypto = require('crypto');
 
 const app = express();
 // 使用8080端口（非特权端口），云托管会自动映射到80端口
@@ -33,7 +34,7 @@ async function getAccessToken() {
   try {
     const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${APPID}&secret=${SECRET}`;
     const response = await axios.get(url);
-    
+
     if (response.data.access_token) {
       // 缓存token，提前5分钟过期
       accessTokenCache.token = response.data.access_token;
@@ -54,7 +55,7 @@ async function getAccessToken() {
 async function sendSubscribeMessage(openId, templateId, page, data) {
   const accessToken = await getAccessToken();
   const url = `https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=${accessToken}`;
-  
+
   try {
     const response = await axios.post(url, {
       touser: openId,
@@ -100,10 +101,10 @@ app.post('/api/user/getOpenId', async (req, res) => {
 
     // 调用微信API换取openId
     const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${APPID}&secret=${SECRET}&js_code=${code}&grant_type=authorization_code`;
-    
+
     try {
       const response = await axios.get(url);
-      
+
       if (response.data.openid) {
         res.json({
           success: true,
@@ -149,10 +150,82 @@ app.post('/api/subscribe/send', async (req, res) => {
 
     // 发送订阅消息
     const result = await sendSubscribeMessage(openId, templateId, page, data);
-    
+
     res.json(result);
   } catch (error) {
     console.error('处理订阅消息请求失败:', error);
+    res.json({
+      success: false,
+      message: error.message || '服务器错误'
+    });
+  }
+});
+
+// 解密手机号接口（新版本：使用code）
+app.post('/api/user/decryptPhone', async (req, res) => {
+  try {
+    const { code, openId, encryptedData, iv } = req.body;
+
+    // 如果提供了code（新版本API），直接使用code获取手机号
+    if (code) {
+      try {
+        const accessToken = await getAccessToken();
+        const url = `https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${accessToken}`;
+
+        const response = await axios.post(url, {
+          code: code
+        });
+
+        if (response.data.errcode === 0 && response.data.phone_info) {
+          const phoneNumber = response.data.phone_info.phoneNumber;
+          return res.json({
+            success: true,
+            data: {
+              phoneNumber: phoneNumber
+            }
+          });
+        } else {
+          console.error('获取手机号失败:', response.data);
+          return res.json({
+            success: false,
+            message: response.data.errmsg || '获取手机号失败'
+          });
+        }
+      } catch (error) {
+        console.error('调用微信API失败:', error);
+        return res.json({
+          success: false,
+          message: error.message || '获取手机号失败'
+        });
+      }
+    }
+
+    // 旧版本：使用encryptedData和iv解密（需要session_key）
+    if (!encryptedData || !iv) {
+      return res.json({
+        success: false,
+        message: '缺少必要参数：code 或 encryptedData和iv'
+      });
+    }
+
+    // 需要先获取session_key（通过openId或code）
+    // 这里简化处理：如果提供了code，先获取session_key
+    if (!openId) {
+      return res.json({
+        success: false,
+        message: '缺少openId参数'
+      });
+    }
+
+    // 注意：旧版本解密需要session_key，但session_key只在登录时获取
+    // 这里返回错误，提示使用新版本API
+    return res.json({
+      success: false,
+      message: '请使用新版本手机号授权API（传递code参数）'
+    });
+
+  } catch (error) {
+    console.error('解密手机号失败:', error);
     res.json({
       success: false,
       message: error.message || '服务器错误'

@@ -1,0 +1,98 @@
+<!--editProfile.wxml-->
+<view class="container">
+  <scroll-view class="content" scroll-y>
+    <!-- 头像编辑 -->
+    <view class="section">
+      <view class="section-title">头像</view>
+      <view class="avatar-section">
+        <button 
+          class="avatar-btn" 
+          open-type="chooseAvatar"
+          bind:chooseavatar="onChooseAvatar"
+        >
+          <image 
+            class="avatar" 
+            src="{{avatarUrl || 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'}}" 
+            mode="aspectFill"
+          ></image>
+          <view class="avatar-mask">
+            <text class="avatar-hint">点击更换</text>
+          </view>
+        </button>
+      </view>
+    </view>
+
+    <!-- 基本信息 -->
+    <view class="section">
+      <view class="section-title">基本信息</view>
+      
+      <!-- 昵称 -->
+      <view class="form-item">
+        <view class="form-label">
+          <text class="label-text">昵称</text>
+          <text class="label-required">*</text>
+        </view>
+        <input 
+          class="form-input" 
+          type="text" 
+          placeholder="请输入昵称" 
+          value="{{nickName}}"
+          bindinput="onNickNameInput"
+          maxlength="20"
+        />
+      </view>
+
+      <!-- 手机号 -->
+      <view class="form-item">
+        <view class="form-label">
+          <text class="label-text">手机号</text>
+        </view>
+        <input 
+          class="form-input" 
+          type="number" 
+          placeholder="请输入11位手机号" 
+          value="{{phoneNumber}}"
+          bindinput="onPhoneNumberInput"
+          maxlength="11"
+        />
+        <text class="form-hint">请输入11位手机号码</text>
+      </view>
+
+      <!-- 部门 -->
+      <view class="form-item">
+        <view class="form-label">
+          <text class="label-text">部门</text>
+        </view>
+        <input 
+          class="form-input" 
+          type="text" 
+          placeholder="请输入部门" 
+          value="{{department}}"
+          bindinput="onDepartmentInput"
+        />
+      </view>
+
+      <!-- 邮箱 -->
+      <view class="form-item">
+        <view class="form-label">
+          <text class="label-text">邮箱</text>
+        </view>
+        <input 
+          class="form-input" 
+          type="text" 
+          placeholder="请输入邮箱地址" 
+          value="{{email}}"
+          bindinput="onEmailInput"
+        />
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部保存按钮 -->
+  <view class="footer">
+    <button class="save-btn" bindtap="saveChanges" disabled="{{loading}}">
+      <text class="save-btn-text">{{loading ? '保存中...' : '保存'}}</text>
+    </button>
+  </view>
+</view>
+

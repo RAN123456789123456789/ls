@@ -55,7 +55,6 @@ export interface BorrowRequestForm {
     name?: string; // 姓名
     phone?: string; // 电话
     email?: string; // 邮箱
-    studentId?: string; // 学号/工号
     department?: string; // 部门/院系
     reason?: string; // 借阅原因
     remark?: string; // 备注
@@ -77,7 +76,6 @@ export interface BorrowRequestRecord {
     name?: string;
     phone?: string;
     email?: string;
-    studentId?: string;
     department?: string;
     reason?: string;
     remark?: string;
@@ -116,7 +114,6 @@ export async function submitBorrowRequest(
             name: form.name || '',
             phone: form.phone || '',
             email: form.email || '',
-            studentId: form.studentId || '',
             department: form.department || '',
             reason: form.reason || '',
             remark: form.remark || '',
@@ -227,7 +224,6 @@ export async function submitBorrowRequest(
                 name: form.name || '',
                 phone: form.phone || '',
                 email: form.email || '',
-                studentId: form.studentId || '',
                 department: form.department || '',
                 reason: form.reason || '',
                 remark: form.remark || '',
@@ -291,7 +287,6 @@ export async function getAllBorrowRequests(): Promise<{
                         name: item.name,
                         phone: item.phone,
                         email: item.email,
-                        studentId: item.studentId,
                         department: item.department,
                         reason: item.reason,
                         remark: item.remark,
@@ -437,7 +432,6 @@ export async function getMyBorrowRequests(): Promise<{
                     name: item.name,
                     phone: item.phone,
                     email: item.email,
-                    studentId: item.studentId,
                     department: item.department,
                     reason: item.reason,
                     remark: item.remark,
@@ -588,7 +582,6 @@ export async function reviewBorrowRequest(
                     name: originalData.name,
                     phone: originalData.phone,
                     email: originalData.email,
-                    studentId: originalData.studentId,
                     department: originalData.department,
                     reason: originalData.reason,
                     remark: originalData.remark,
@@ -834,7 +827,6 @@ export async function confirmBorrow(
                     name: originalData.name,
                     phone: originalData.phone,
                     email: originalData.email,
-                    studentId: originalData.studentId,
                     department: originalData.department,
                     reason: originalData.reason,
                     remark: originalData.remark,
@@ -996,7 +988,6 @@ export async function confirmReturn(
                     name: originalData.name,
                     phone: originalData.phone,
                     email: originalData.email,
-                    studentId: originalData.studentId,
                     department: originalData.department,
                     reason: originalData.reason,
                     remark: originalData.remark,

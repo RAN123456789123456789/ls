@@ -2,6 +2,7 @@
   "pages": [
     "pages/borrow/borrow",
     "pages/mine/mine",
+    "pages/editProfile/editProfile",
     "pages/borrowForm/borrowForm",
     "pages/adminReview/adminReview",
     "pages/books/books",
