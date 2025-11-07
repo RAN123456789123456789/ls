@@ -71,7 +71,8 @@ export interface SendSubscribeMessageParams {
 //
 // 后端API配置
 // 方式1：使用公网域名（HTTP请求）- 当前使用此方式
-const API_BASE_URL = 'https://ranguofang.com/api'; // ⚠️ 已配置，如需修改请替换
+// 使用云托管默认域名（临时方案，等待域名备案完成后可切换为自定义域名）
+const API_BASE_URL = 'https://express-bec5-197615-5-1385276628.sh.run.tcloudbase.com/api';
 
 // 方式2：使用云开发调用（推荐，更安全）
 // 如果使用云开发调用，请取消下面的注释并注释掉上面的 HTTP 请求方式

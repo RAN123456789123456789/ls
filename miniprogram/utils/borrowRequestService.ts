@@ -8,7 +8,8 @@ import { getBeijingTimeISOString, formatDate as formatDateUtil, getBeijingTime }
 import { sendBorrowSuccessNotification } from './subscribeService';
 
 // API配置
-const API_BASE_URL = 'https://ranguofang.com/api'; // 请替换为实际的后端API地址
+// 使用云托管默认域名（临时方案，等待域名备案完成后可切换为自定义域名）
+const API_BASE_URL = 'https://express-bec5-197615-5-1385276628.sh.run.tcloudbase.com/api';
 
 /**
  * 初始化云数据库（如果使用云开发）
