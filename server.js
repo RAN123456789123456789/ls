@@ -86,6 +86,54 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: '服务运行正常' });
 });
 
+// 获取用户openId接口
+app.post('/api/user/getOpenId', async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    if (!code) {
+      return res.json({
+        success: false,
+        message: '缺少code参数'
+      });
+    }
+
+    // 调用微信API换取openId
+    const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${APPID}&secret=${SECRET}&js_code=${code}&grant_type=authorization_code`;
+    
+    try {
+      const response = await axios.get(url);
+      
+      if (response.data.openid) {
+        res.json({
+          success: true,
+          data: {
+            openId: response.data.openid
+          }
+        });
+      } else {
+        console.error('获取openId失败:', response.data);
+        res.json({
+          success: false,
+          message: response.data.errmsg || '获取openId失败'
+        });
+      }
+    } catch (error) {
+      console.error('调用微信API失败:', error);
+      res.json({
+        success: false,
+        message: error.message || '获取openId失败'
+      });
+    }
+  } catch (error) {
+    console.error('处理获取openId请求失败:', error);
+    res.json({
+      success: false,
+      message: error.message || '服务器错误'
+    });
+  }
+});
+
 // 订阅消息发送接口
 app.post('/api/subscribe/send', async (req, res) => {
   try {
