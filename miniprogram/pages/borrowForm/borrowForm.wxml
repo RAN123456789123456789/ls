@@ -137,6 +137,34 @@
     <view class="form-section">
       <text class="section-title">其他信息</text>
       
+      <!-- 借阅类型选择 -->
+      <view class="form-item">
+        <text class="form-label">借阅类型 <text class="required-mark">*</text></text>
+        <view class="borrow-type-buttons">
+          <button 
+            class="type-btn {{form.borrowType === 'borrow' ? 'active' : ''}}"
+            bindtap="onBorrowTypeChange"
+            data-type="borrow"
+          >
+            借出
+          </button>
+          <button 
+            class="type-btn {{form.borrowType === 'copy' ? 'active' : ''}}"
+            bindtap="onBorrowTypeChange"
+            data-type="copy"
+          >
+            复印
+          </button>
+          <button 
+            class="type-btn {{form.borrowType === 'reference' ? 'active' : ''}}"
+            bindtap="onBorrowTypeChange"
+            data-type="reference"
+          >
+            参考
+          </button>
+        </view>
+      </view>
+      
       <view class="form-item">
         <text class="form-label">借阅原因</text>
         <textarea 

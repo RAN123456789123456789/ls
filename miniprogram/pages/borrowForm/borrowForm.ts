@@ -1,5 +1,5 @@
 // pages/borrowForm/borrowForm.ts
-import { submitBorrowRequest, BorrowRequestForm } from '../../utils/borrowRequestService';
+import { submitBorrowRequest, BorrowRequestForm, BorrowType } from '../../utils/borrowRequestService';
 import { userLogin, isUserLoggedIn } from '../../utils/userService';
 import { getBeijingTime, formatDate as formatDateUtil, getTodayBeijingDate } from '../../utils/util';
 import { requestSubscribeBeforeAction, SubscribeMessageType } from '../../utils/subscribeMessage';
@@ -22,6 +22,7 @@ Page({
             bookId: '',
             bookName: '',
             borrowDays: 7,
+            borrowType: BorrowType.BORROW, // 默认选择借出
             name: '',
             phone: '',
             email: '',
@@ -373,6 +374,16 @@ Page({
     },
 
     /**
+     * 选择借阅类型
+     */
+    onBorrowTypeChange(e: any) {
+        const type = e.currentTarget.dataset.type as BorrowType;
+        this.setData({
+            'form.borrowType': type,
+        });
+    },
+
+    /**
      * 格式化日期为 YYYY-MM-DD（使用北京时间）
      */
     formatDate(date: Date): string {
@@ -433,6 +444,15 @@ Page({
         if (!form.borrowDays || form.borrowDays <= 0) {
             wx.showToast({
                 title: '请选择借阅天数',
+                icon: 'none',
+            });
+            return;
+        }
+
+        // 验证借阅类型
+        if (!form.borrowType) {
+            wx.showToast({
+                title: '请选择借阅类型',
                 icon: 'none',
             });
             return;

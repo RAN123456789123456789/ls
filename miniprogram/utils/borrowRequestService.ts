@@ -47,10 +47,18 @@ export enum BorrowRequestStatus {
 }
 
 // 借阅申请表单数据
+// 借阅类型枚举
+export enum BorrowType {
+    BORROW = 'borrow', // 借出
+    COPY = 'copy', // 复印
+    REFERENCE = 'reference', // 参考
+}
+
 export interface BorrowRequestForm {
     bookId: string;
     bookName: string;
     borrowDays: number;
+    borrowType?: BorrowType; // 借阅类型：借出、复印、参考
     // 必填字段
     name: string; // 姓名（必填）
     phone: string; // 电话（必填）
@@ -85,6 +93,10 @@ export interface BorrowRequestRecord {
     // 审核信息
     adminOpenId?: string; // 审核管理员
     adminRemark?: string; // 审核备注
+    // 借出信息
+    archiveNumbers?: string[]; // 档号列表（一个档号一行）
+    borrowReason?: string; // 借出理由
+    borrowType?: BorrowType; // 借阅类型：借出、复印、参考
     createdAt: string; // 申请时间（ISO 字符串，北京时间）
     updatedAt: string; // 更新时间（ISO 字符串，北京时间）
 }
@@ -113,6 +125,7 @@ export async function submitBorrowRequest(
             bookName: form.bookName,
             openId,
             borrowDays: form.borrowDays,
+            borrowType: form.borrowType || BorrowType.BORROW, // 借阅类型，默认为借出
             status: BorrowRequestStatus.PENDING,
             name: form.name || '',
             phone: form.phone || '',
@@ -226,6 +239,7 @@ export async function submitBorrowRequest(
                 bookName: form.bookName,
                 openId: openId || '',
                 borrowDays: form.borrowDays,
+                borrowType: form.borrowType || BorrowType.BORROW,
                 status: BorrowRequestStatus.PENDING,
                 name: form.name || '',
                 phone: form.phone || '',
@@ -298,6 +312,9 @@ export async function getAllBorrowRequests(): Promise<{
                         remark: item.remark,
                         adminOpenId: item.adminOpenId, // 审核管理员信息
                         adminRemark: item.adminRemark, // 审核备注
+                        archiveNumbers: item.archiveNumbers,
+                        borrowReason: item.borrowReason,
+                        borrowType: item.borrowType,
                         createdAt: item.createdAt || '',
                         updatedAt: item.updatedAt || '',
                     }));
@@ -443,6 +460,9 @@ export async function getMyBorrowRequests(): Promise<{
                     remark: item.remark,
                     adminOpenId: item.adminOpenId,
                     adminRemark: item.adminRemark,
+                    archiveNumbers: item.archiveNumbers,
+                    borrowReason: item.borrowReason,
+                    borrowType: item.borrowType,
                     createdAt: item.createdAt || '',
                     updatedAt: item.updatedAt || '',
                 }));
@@ -517,8 +537,20 @@ export async function reviewBorrowRequest(
                 const originalData = doc.data;
 
                 // 确定状态值
-                const newStatus = action === 'approve' ? BorrowRequestStatus.APPROVED : BorrowRequestStatus.REJECTED;
-                console.log('审核操作:', action, '当前状态:', originalData.status, '新状态:', newStatus);
+                // 如果是参考类型且通过审核，直接设置为已归还状态（跳过已批准和已借出步骤）
+                let newStatus: BorrowRequestStatus;
+                if (action === 'approve') {
+                    if (originalData.borrowType === BorrowType.REFERENCE) {
+                        // 参考类型：待审核 -> 已归还（跳过已批准和已借出）
+                        newStatus = BorrowRequestStatus.RETURNED;
+                    } else {
+                        // 借出和复印类型：待审核 -> 已批准
+                        newStatus = BorrowRequestStatus.APPROVED;
+                    }
+                } else {
+                    newStatus = BorrowRequestStatus.REJECTED;
+                }
+                console.log('审核操作:', action, '借阅类型:', originalData.borrowType, '当前状态:', originalData.status, '新状态:', newStatus);
 
                 const updateData: any = {
                     status: newStatus,
@@ -535,7 +567,15 @@ export async function reviewBorrowRequest(
                     returnDate.setDate(returnDate.getDate() + borrowDays);
                     updateData.borrowDate = formatDateUtil(borrowDate);
                     updateData.returnDate = formatDateUtil(returnDate);
-                    console.log('通过审核，设置借阅日期:', updateData.borrowDate, '归还日期:', updateData.returnDate);
+
+                    // 如果是参考类型，直接设置为已归还，需要设置归还时间
+                    if (originalData.borrowType === BorrowType.REFERENCE) {
+                        updateData.borrowTime = now; // 借出时间（北京时间）
+                        updateData.returnTime = now; // 归还时间（北京时间，参考类型立即归还）
+                        console.log('参考类型通过审核，直接设置为已归还，借阅日期:', updateData.borrowDate, '归还日期:', updateData.returnDate);
+                    } else {
+                        console.log('通过审核，设置借阅日期:', updateData.borrowDate, '归还日期:', updateData.returnDate);
+                    }
                 }
 
                 // 同步返回到message集合
@@ -582,8 +622,8 @@ export async function reviewBorrowRequest(
                     borrowDays: originalData.borrowDays || 7,
                     borrowDate: updateData.borrowDate,
                     returnDate: updateData.returnDate,
-                    borrowTime: originalData.borrowTime,
-                    returnTime: originalData.returnTime,
+                    borrowTime: updateData.borrowTime || originalData.borrowTime,
+                    returnTime: updateData.returnTime || originalData.returnTime,
                     status: updateData.status,
                     name: originalData.name,
                     phone: originalData.phone,
@@ -593,6 +633,7 @@ export async function reviewBorrowRequest(
                     remark: originalData.remark,
                     adminOpenId: openId,
                     adminRemark: adminRemark || '',
+                    borrowType: originalData.borrowType,
                     createdAt: originalData.createdAt || '',
                     updatedAt: now,
                 };
@@ -714,10 +755,14 @@ export async function reviewBorrowRequest(
  * 从message集合读取数据，确认后同步返回到message集合
  * @param requestId 申请ID
  * @param dueDate 归还日期（格式：YYYY-MM-DD）
+ * @param archiveNumbers 档号列表（可选）
+ * @param borrowReason 借出理由（可选）
  */
 export async function confirmBorrow(
     requestId: string,
-    dueDate: string
+    dueDate: string,
+    archiveNumbers?: string[],
+    borrowReason?: string
 ): Promise<{ success: boolean; message?: string; data?: BorrowRequestRecord }> {
     try {
         const openId = await getUserOpenId();
@@ -774,6 +819,16 @@ export async function confirmBorrow(
                     borrowTime: now, // 借出时间（北京时间）
                     updatedAt: now,
                 };
+
+                // 如果有档号，保存到数据库
+                if (archiveNumbers && archiveNumbers.length > 0) {
+                    updateData.archiveNumbers = archiveNumbers;
+                }
+
+                // 如果有借出理由，保存到数据库
+                if (borrowReason) {
+                    updateData.borrowReason = borrowReason;
+                }
 
                 // 同步返回到message集合
                 console.log('准备更新message集合（确认借出），requestId:', requestId);
@@ -838,6 +893,8 @@ export async function confirmBorrow(
                     remark: originalData.remark,
                     adminOpenId: originalData.adminOpenId,
                     adminRemark: originalData.adminRemark,
+                    archiveNumbers: updateData.archiveNumbers || originalData.archiveNumbers,
+                    borrowReason: updateData.borrowReason || originalData.borrowReason,
                     createdAt: originalData.createdAt || '',
                     updatedAt: now,
                 };

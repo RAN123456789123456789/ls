@@ -15,6 +15,11 @@ Page({
         filteredRequests: [] as BorrowRequestRecord[], // 筛选后的申请列表
         loading: false,
         currentTab: 'pending' as 'pending' | 'approved' | 'borrowed' | 'returned',
+        // 确认借出弹窗相关
+        showBorrowModal: false,
+        currentBorrowRequestId: '', // 当前要借出的申请ID
+        archiveNumbers: [''] as string[], // 档号列表
+        borrowReason: '', // 借出理由
     },
 
     onLoad() {
@@ -276,9 +281,19 @@ Page({
             });
         } else {
             // 批准申请
+            // 根据借阅类型显示不同的提示
+            const borrowTypeText = request.borrowType === 'reference' ? '参考' :
+                request.borrowType === 'copy' ? '复印' : '借出';
+            let contentText = `确定要通过《${request.bookName}》的借阅申请吗？`;
+            if (request.borrowType === 'reference') {
+                contentText += '\n参考类型通过后，申请将直接完成（已归还）。';
+            } else {
+                contentText += '\n通过后，申请将进入"待借出"列表。';
+            }
+
             wx.showModal({
                 title: '通过申请',
-                content: `确定要通过《${request.bookName}》的借阅申请吗？\n通过后，申请将进入"待借出"列表。`,
+                content: contentText,
                 success: async (res) => {
                     if (res.confirm) {
                         wx.showLoading({
@@ -373,6 +388,11 @@ Page({
         }
 
         let content = `档案名称：${request.bookName}\n`;
+        if (request.borrowType) {
+            const borrowTypeText = request.borrowType === 'reference' ? '参考' :
+                request.borrowType === 'copy' ? '复印' : '借出';
+            content += `借阅类型：${borrowTypeText}\n`;
+        }
         content += `借阅天数：${request.borrowDays}天\n`;
         if (request.name) content += `借阅人姓名：${request.name}\n`;
         if (request.phone) content += `电话：${request.phone}\n`;
@@ -384,7 +404,10 @@ Page({
         if (request.borrowDate) content += `借阅日期：${request.borrowDate}\n`;
         if (request.borrowTime) content += `借出时间：${this.formatDate(request.borrowTime)}\n`;
         if (request.returnDate) content += `归还日期：${request.returnDate}\n`;
-        if (request.returnTime) content += `归还时间：${this.formatDate(request.returnTime)}\n`;
+        if (request.archiveNumbers && request.archiveNumbers.length > 0) {
+            content += `档号：${request.archiveNumbers.join('、')}\n`;
+        }
+        if (request.borrowReason) content += `借出理由：${request.borrowReason}\n`;
         if (request.adminRemark) content += `审核备注：${request.adminRemark}\n`;
         content += `状态：${this.getStatusText(request.status)}`;
 
@@ -409,9 +432,9 @@ Page({
     },
 
     /**
-     * 确认借出（弹出日期选择）
+     * 确认借出（打开弹窗表单）
      */
-    async confirmBorrowRecord(e: any) {
+    confirmBorrowRecord(e: any) {
         const requestId = e.currentTarget.dataset.id;
         const request = this.data.requests.find(r => r.id === requestId);
 
@@ -419,93 +442,203 @@ Page({
             return;
         }
 
+        // 打开弹窗，初始化表单数据
+        this.setData({
+            showBorrowModal: true,
+            currentBorrowRequestId: requestId,
+            archiveNumbers: [''],
+            borrowReason: '',
+        });
+    },
+
+    /**
+     * 关闭确认借出弹窗
+     */
+    closeBorrowModal() {
+        this.setData({
+            showBorrowModal: false,
+            currentBorrowRequestId: '',
+            archiveNumbers: [''],
+            borrowReason: '',
+        });
+    },
+
+    /**
+     * 阻止事件冒泡
+     */
+    stopPropagation() {
+        // 阻止事件冒泡，防止点击内容区域关闭弹窗
+    },
+
+    /**
+     * 添加档号输入框
+     */
+    addArchiveNumber() {
+        const archiveNumbers = [...this.data.archiveNumbers, ''];
+        this.setData({
+            archiveNumbers: archiveNumbers,
+        });
+    },
+
+    /**
+     * 删除档号输入框
+     */
+    removeArchiveNumber(e: any) {
+        const index = e.currentTarget.dataset.index;
+        const archiveNumbers = [...this.data.archiveNumbers];
+        archiveNumbers.splice(index, 1);
+        // 如果删除后没有档号了，至少保留一个空输入框
+        if (archiveNumbers.length === 0) {
+            archiveNumbers.push('');
+        }
+        this.setData({
+            archiveNumbers: archiveNumbers,
+        });
+    },
+
+    /**
+     * 档号输入
+     */
+    onArchiveNumberInput(e: any) {
+        const index = e.currentTarget.dataset.index;
+        const value = e.detail.value;
+        const archiveNumbers = [...this.data.archiveNumbers];
+        archiveNumbers[index] = value;
+        this.setData({
+            archiveNumbers: archiveNumbers,
+        });
+    },
+
+    /**
+     * 借出理由输入
+     */
+    onBorrowReasonInput(e: any) {
+        this.setData({
+            borrowReason: e.detail.value,
+        });
+    },
+
+    /**
+     * 确认借出（带档号和理由）
+     */
+    async confirmBorrowWithInfo() {
+        // 验证档号
+        const validArchiveNumbers = this.data.archiveNumbers.filter(num => num.trim() !== '');
+        if (validArchiveNumbers.length === 0) {
+            wx.showToast({
+                title: '请至少输入一个档号',
+                icon: 'none',
+            });
+            return;
+        }
+
+        // 验证理由
+        if (!this.data.borrowReason || !this.data.borrowReason.trim()) {
+            wx.showToast({
+                title: '请输入借出理由',
+                icon: 'none',
+            });
+            return;
+        }
+
+        const requestId = this.data.currentBorrowRequestId;
+        const request = this.data.requests.find(r => r.id === requestId);
+
+        if (!request) {
+            wx.showToast({
+                title: '申请不存在',
+                icon: 'none',
+            });
+            return;
+        }
+
         // 归还日期固定为今天（北京时间）
         const today = getBeijingTime();
         const returnDateStr = formatDate(today);
 
-        console.log('确认借出 - 归还日期设置为今天:', returnDateStr);
+        wx.showLoading({
+            title: '处理中...',
+        });
 
-        // 直接确认借出，归还日期为今天
-        wx.showModal({
-            title: '确认借出',
-            content: `确定要借出《${request.bookName}》吗？\n归还日期：${returnDateStr}`,
-            success: async (res) => {
-                if (res.confirm) {
-                    wx.showLoading({
-                        title: '处理中...',
-                    });
+        try {
+            // 调用确认借出接口，传入档号和理由
+            const result = await confirmBorrow(
+                requestId,
+                returnDateStr,
+                validArchiveNumbers,
+                this.data.borrowReason.trim()
+            );
 
+            if (result.success) {
+                // 发送借阅成功订阅消息（包含档号和理由）
+                if (result.data) {
+                    const borrowRecord = result.data;
+                    const userOpenId = borrowRecord.openId;
+
+                    // 格式化借阅日期和归还日期
+                    let borrowDateStr = '';
+                    let finalReturnDateStr = returnDateStr;
+
+                    if (borrowRecord.borrowTime) {
+                        const borrowTime = new Date(borrowRecord.borrowTime);
+                        borrowDateStr = formatDate(borrowTime);
+                    } else if (borrowRecord.borrowDate) {
+                        borrowDateStr = borrowRecord.borrowDate;
+                    } else {
+                        borrowDateStr = formatDate(getBeijingTime());
+                    }
+
+                    if (borrowRecord.returnDate) {
+                        finalReturnDateStr = borrowRecord.returnDate;
+                    }
+
+                    // 发送订阅消息（包含档号和理由）
                     try {
-                        const result = await confirmBorrow(requestId, returnDateStr);
-
-                        if (result.success) {
-                            // 发送借阅成功订阅消息
-                            if (result.data) {
-                                const borrowRecord = result.data;
-                                const userOpenId = borrowRecord.openId;
-
-                                // 格式化借阅日期和归还日期
-                                let borrowDateStr = '';
-                                let finalReturnDateStr = returnDateStr; // 使用传入的归还日期
-
-                                if (borrowRecord.borrowTime) {
-                                    const borrowTime = new Date(borrowRecord.borrowTime);
-                                    borrowDateStr = formatDate(borrowTime);
-                                } else if (borrowRecord.borrowDate) {
-                                    borrowDateStr = borrowRecord.borrowDate;
-                                } else {
-                                    borrowDateStr = formatDate(getBeijingTime());
-                                }
-
-                                // 优先使用记录中的归还日期，否则使用传入的归还日期
-                                if (borrowRecord.returnDate) {
-                                    finalReturnDateStr = borrowRecord.returnDate;
-                                }
-
-                                // 发送订阅消息（不请求权限，后台发送）
-                                try {
-                                    await sendBorrowSuccessNotification(
-                                        userOpenId,
-                                        borrowRecord.bookName,
-                                        borrowDateStr,
-                                        finalReturnDateStr,
-                                        borrowRecord.id,
-                                        'pages/myBorrows/myBorrows',
-                                        false // 不请求权限，后台发送
-                                    );
-                                    console.log('已发送借阅成功通知');
-                                } catch (subscribeError: any) {
-                                    console.warn('发送借阅成功通知失败:', subscribeError);
-                                    // 订阅消息发送失败不影响操作
-                                }
-                            }
-
-                            wx.hideLoading();
-                            wx.showToast({
-                                title: result.message || '借出确认成功',
-                                icon: 'success',
-                            });
-                            // 刷新列表（从message集合同步最新数据）
-                            console.log('借出确认完成，刷新申请列表...');
-                            await this.loadRequests();
-                        } else {
-                            wx.hideLoading();
-                            wx.showToast({
-                                title: result.message || '操作失败',
-                                icon: 'none',
-                            });
-                        }
-                    } catch (error: any) {
-                        wx.hideLoading();
-                        console.error('确认借出失败:', error);
-                        wx.showToast({
-                            title: '操作失败，请稍后重试',
-                            icon: 'none',
-                        });
+                        await sendBorrowSuccessNotification(
+                            userOpenId,
+                            borrowRecord.bookName,
+                            borrowDateStr,
+                            finalReturnDateStr,
+                            borrowRecord.id,
+                            'pages/myBorrows/myBorrows',
+                            false, // 不请求权限，后台发送
+                            validArchiveNumbers,
+                            this.data.borrowReason.trim()
+                        );
+                        console.log('已发送借阅成功通知（包含档号和理由）');
+                    } catch (subscribeError: any) {
+                        console.warn('发送借阅成功通知失败:', subscribeError);
+                        // 订阅消息发送失败不影响操作
                     }
                 }
-            },
-        });
+
+                wx.hideLoading();
+                wx.showToast({
+                    title: result.message || '借出确认成功',
+                    icon: 'success',
+                });
+
+                // 关闭弹窗
+                this.closeBorrowModal();
+
+                // 刷新列表（从message集合同步最新数据）
+                console.log('借出确认完成，刷新申请列表...');
+                await this.loadRequests();
+            } else {
+                wx.hideLoading();
+                wx.showToast({
+                    title: result.message || '操作失败',
+                    icon: 'none',
+                });
+            }
+        } catch (error: any) {
+            wx.hideLoading();
+            console.error('确认借出失败:', error);
+            wx.showToast({
+                title: '操作失败，请稍后重试',
+                icon: 'none',
+            });
+        }
     },
 
     /**

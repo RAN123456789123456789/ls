@@ -323,6 +323,8 @@ function buildTemplateData(
 /**
  * 发送借阅成功通知
  * @param requestPermission 是否请求权限（默认true，从底部弹出权限窗口）
+ * @param archiveNumbers 档号列表（可选）
+ * @param borrowReason 借出理由（可选）
  */
 export async function sendBorrowSuccessNotification(
     openId: string,
@@ -331,14 +333,31 @@ export async function sendBorrowSuccessNotification(
     returnDate: string,
     borrowNumber?: string,
     page?: string,
-    requestPermission: boolean = true
+    requestPermission: boolean = true,
+    archiveNumbers?: string[],
+    borrowReason?: string
 ): Promise<{ success: boolean; message?: string }> {
+    // 构建档号和理由信息字符串
+    let extraInfo = '';
+    if (archiveNumbers && archiveNumbers.length > 0) {
+        extraInfo += `档号：${archiveNumbers.join('、')}`;
+    }
+    if (borrowReason) {
+        if (extraInfo) extraInfo += '\n';
+        extraInfo += `理由：${borrowReason}`;
+    }
+
+    // 如果有额外信息，将其添加到图书名称后面（用括号标注）
+    // 注意：由于微信订阅消息模板字段限制，我们将档号和理由信息添加到备注中
+    // 如果模板支持备注字段，可以单独传递；否则可以组合到图书名称中
+    const finalBookName = extraInfo ? `${bookName}\n${extraInfo}` : bookName;
+
     return sendSubscribeMessage({
         type: SubscribeMessageType.BORROW_SUCCESS,
         openId,
         data: {
             borrowSuccess: {
-                bookName,
+                bookName: finalBookName, // 将档号和理由信息包含在图书名称中
                 borrowDate,
                 returnDate,
                 borrowNumber,
