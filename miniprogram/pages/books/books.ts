@@ -1,6 +1,7 @@
 // pages/books/books.ts
 import { getBookList, BookInfo } from '../../utils/borrowService';
-import { getMyBorrowRecords, BorrowRecord } from '../../utils/borrowService';
+import { getMyBorrowRecords } from '../../utils/borrowService';
+import { BorrowRecord } from '../../utils/subscribeScheduler';
 
 Page({
     data: {

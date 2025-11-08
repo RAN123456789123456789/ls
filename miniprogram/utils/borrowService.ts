@@ -6,6 +6,9 @@
 import { BorrowRecord, saveBorrowRecord, removeBorrowRecord } from './subscribeScheduler';
 import { getUserOpenId } from './userService';
 
+// 重新导出 BorrowRecord 类型，供其他模块使用
+export { BorrowRecord };
+
 // API配置
 // 使用云托管默认域名（临时方案，等待域名备案完成后可切换为自定义域名）
 const API_BASE_URL = 'https://express-bec5-197615-5-1385276628.sh.run.tcloudbase.com/api';

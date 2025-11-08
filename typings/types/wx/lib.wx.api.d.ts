@@ -22,6 +22,22 @@ SOFTWARE.
 
 /// <reference path="./lib.wx.xr-frame.d.ts" />
 
+/**
+ * CanvasRenderingContext 命名空间声明
+ * 用于支持 Canvas 2D、WebGL 和 WebGL2 上下文类型
+ */
+declare namespace CanvasRenderingContext {
+    interface CanvasRenderingContext2D {
+        [key: string]: any;
+    }
+    interface WebGLRenderingContext {
+        [key: string]: any;
+    }
+    interface WebGL2RenderingContext {
+        [key: string]: any;
+    }
+}
+
 declare namespace WechatMiniprogram {
     interface AccessOption {
         /** 要判断是否存在的文件/目录路径 (本地路径) */
@@ -465,17 +481,17 @@ declare namespace WechatMiniprogram {
          * - 'utf8': ;
          * - 'latin1': ; */
         encoding?:
-            | 'ascii'
-            | 'base64'
-            | 'binary'
-            | 'hex'
-            | 'ucs2'
-            | 'ucs-2'
-            | 'utf16le'
-            | 'utf-16le'
-            | 'utf-8'
-            | 'utf8'
-            | 'latin1'
+        | 'ascii'
+        | 'base64'
+        | 'binary'
+        | 'hex'
+        | 'ucs2'
+        | 'ucs-2'
+        | 'utf16le'
+        | 'utf-16le'
+        | 'utf-8'
+        | 'utf8'
+        | 'latin1'
         /** 接口调用失败的回调函数 */
         fail?: AppendFileFailCallback
         /** 接口调用成功的回调函数 */
@@ -4165,7 +4181,7 @@ ctx.draw()
      * | WhiteSmoke           | #F5F5F5 |
      * | Yellow               | #FFFF00 |
      * | YellowGreen          | #9ACD32 | */
-    interface Color {}
+    interface Color { }
     interface CompressImageOption {
         /** 图片路径，图片的路径，支持本地路径、代码包路径 */
         src: string
@@ -4819,17 +4835,17 @@ ctx.draw()
          * - 'utf8': ;
          * - 'latin1': ; */
         encoding?:
-            | 'ascii'
-            | 'base64'
-            | 'binary'
-            | 'hex'
-            | 'ucs2'
-            | 'ucs-2'
-            | 'utf16le'
-            | 'utf-16le'
-            | 'utf-8'
-            | 'utf8'
-            | 'latin1'
+        | 'ascii'
+        | 'base64'
+        | 'binary'
+        | 'hex'
+        | 'ucs2'
+        | 'ucs-2'
+        | 'utf16le'
+        | 'utf-16le'
+        | 'utf-8'
+        | 'utf8'
+        | 'latin1'
         /** 指定文件的长度，如果不指定，则读到文件末尾。有效范围：[1, fileLength]。单位：byte */
         length?: number
         /** 从文件指定位置开始读，如果不指定，则从文件头开始读。读取的范围应该是左闭右开区间 [position, position+length)。有效范围：[0, fileLength - 1]。单位：byte */
@@ -5814,14 +5830,14 @@ ctx.draw()
          * - 'right-mirrored': 同 right，但镜像翻转，对应 Exif 中的 7;
          * - 'left': 逆时针旋转90度，对应 Exif 中的 8; */
         orientation:
-            | 'up'
-            | 'up-mirrored'
-            | 'down'
-            | 'down-mirrored'
-            | 'left-mirrored'
-            | 'right'
-            | 'right-mirrored'
-            | 'left'
+        | 'up'
+        | 'up-mirrored'
+        | 'down'
+        | 'down-mirrored'
+        | 'left-mirrored'
+        | 'right'
+        | 'right-mirrored'
+        | 'left'
         /** 图片的本地路径 */
         path: string
         /** 需要基础库： `1.9.90`
@@ -6438,14 +6454,14 @@ ctx.draw()
          * - 'left-mirrored': 同left，但垂直翻转;
          * - 'right-mirrored': 同right，但垂直翻转; */
         orientation:
-            | 'up'
-            | 'down'
-            | 'left'
-            | 'right'
-            | 'up-mirrored'
-            | 'down-mirrored'
-            | 'left-mirrored'
-            | 'right-mirrored'
+        | 'up'
+        | 'down'
+        | 'left'
+        | 'right'
+        | 'up-mirrored'
+        | 'down-mirrored'
+        | 'left-mirrored'
+        | 'right-mirrored'
         /** 视频大小，单位 kB */
         size: number
         /** 视频格式 */
@@ -7396,11 +7412,11 @@ InnerAudioContext.offWaiting(listener) // 需传入与监听时同一个的函�
          * - 'embedded': 内嵌，通过打开半屏小程序能力打开的小程序;
          * - 'chatTool': 聊天工具，通过打开聊天工具能力打开的小程序; */
         apiCategory:
-            | 'default'
-            | 'nativeFunctionalized'
-            | 'browseOnly'
-            | 'embedded'
-            | 'chatTool'
+        | 'default'
+        | 'nativeFunctionalized'
+        | 'browseOnly'
+        | 'embedded'
+        | 'chatTool'
         /** 打开的文件信息数组，只有从聊天素材场景打开（scene为1173）才会携带该参数 */
         forwardMaterials: ForwardMaterials[]
         /** 启动小程序的路径 (代码包路径) */
@@ -8211,11 +8227,11 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
          * - 'embedded': 内嵌，通过打开半屏小程序能力打开的小程序;
          * - 'chatTool': 聊天工具打开小程序; */
         apiCategory:
-            | 'default'
-            | 'nativeFunctionalized'
-            | 'browseOnly'
-            | 'embedded'
-            | 'chatTool'
+        | 'default'
+        | 'nativeFunctionalized'
+        | 'browseOnly'
+        | 'embedded'
+        | 'chatTool'
     }
     interface OnAppRouteDoneListenerResult {
         /** 路由打开类型 */
@@ -8637,7 +8653,7 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
         /** 端口号 */
         port: number
     }
-    interface OnNeedPrivacyAuthorizationListenerResult {}
+    interface OnNeedPrivacyAuthorizationListenerResult { }
     interface OnNetworkStatusChangeListenerResult {
         /** 当前是否有网络连接 */
         isConnected: boolean
@@ -9101,18 +9117,18 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
          * - 'w+': 打开文件用于读取和写入。 如果文件不存在则创建文件，如果文件存在则截断文件;
          * - 'wx+': 类似于 'w+'，但如果路径存在，则失败; */
         flag?:
-            | 'a'
-            | 'ax'
-            | 'a+'
-            | 'ax+'
-            | 'as'
-            | 'as+'
-            | 'r'
-            | 'r+'
-            | 'w'
-            | 'wx'
-            | 'w+'
-            | 'wx+'
+        | 'a'
+        | 'ax'
+        | 'a+'
+        | 'ax+'
+        | 'as'
+        | 'as+'
+        | 'r'
+        | 'r+'
+        | 'w'
+        | 'wx'
+        | 'w+'
+        | 'wx+'
         /** 接口调用成功的回调函数 */
         success?: OpenSuccessCallback
     }
@@ -9246,18 +9262,18 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
          * - 'w+': 打开文件用于读取和写入。 如果文件不存在则创建文件，如果文件存在则截断文件;
          * - 'wx+': 类似于 'w+'，但如果路径存在，则失败; */
         flag?:
-            | 'a'
-            | 'ax'
-            | 'a+'
-            | 'ax+'
-            | 'as'
-            | 'as+'
-            | 'r'
-            | 'r+'
-            | 'w'
-            | 'wx'
-            | 'w+'
-            | 'wx+'
+        | 'a'
+        | 'ax'
+        | 'a+'
+        | 'ax+'
+        | 'as'
+        | 'as+'
+        | 'r'
+        | 'r+'
+        | 'w'
+        | 'wx'
+        | 'w+'
+        | 'wx+'
     }
     interface OpenSystemBluetoothSettingOption {
         /** 接口调用结束的回调函数（调用成功、失败都会执行） */
@@ -9404,15 +9420,15 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
          * - 'downloadPackage': 代码包下载耗时。(entryType: loadPackage);
          * - 'resourceTiming': 视图层资源加载耗时。(entryType: resource); */
         name:
-            | 'appLaunch'
-            | 'route'
-            | 'firstRender'
-            | 'firstPaint'
-            | 'firstContentfulPaint'
-            | 'largestContentfulPaint'
-            | 'evaluateScript'
-            | 'downloadPackage'
-            | 'resourceTiming'
+        | 'appLaunch'
+        | 'route'
+        | 'firstRender'
+        | 'firstPaint'
+        | 'firstContentfulPaint'
+        | 'largestContentfulPaint'
+        | 'evaluateScript'
+        | 'downloadPackage'
+        | 'resourceTiming'
         /** 路由真正响应开始时间。仅 navigation 类型指标有效。 */
         navigationStart: number
         /** 路由详细类型，与小程序路由方法对应。仅 navigation 类型指标有效。 */
@@ -9768,17 +9784,17 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
          * - 'utf8': ;
          * - 'latin1': ; */
         encoding?:
-            | 'ascii'
-            | 'base64'
-            | 'binary'
-            | 'hex'
-            | 'ucs2'
-            | 'ucs-2'
-            | 'utf16le'
-            | 'utf-16le'
-            | 'utf-8'
-            | 'utf8'
-            | 'latin1'
+        | 'ascii'
+        | 'base64'
+        | 'binary'
+        | 'hex'
+        | 'ucs2'
+        | 'ucs-2'
+        | 'utf16le'
+        | 'utf-16le'
+        | 'utf-8'
+        | 'utf8'
+        | 'latin1'
         /** 接口调用失败的回调函数 */
         fail?: ReadFileFailCallback
         /** 需要基础库： `2.10.0`
@@ -9863,17 +9879,17 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
          * - 'utf8': ;
          * - 'latin1': ; */
         encoding?:
-            | 'ascii'
-            | 'base64'
-            | 'binary'
-            | 'hex'
-            | 'ucs2'
-            | 'ucs-2'
-            | 'utf16le'
-            | 'utf-16le'
-            | 'utf-8'
-            | 'utf8'
-            | 'latin1'
+        | 'ascii'
+        | 'base64'
+        | 'binary'
+        | 'hex'
+        | 'ucs2'
+        | 'ucs-2'
+        | 'utf16le'
+        | 'utf-16le'
+        | 'utf-8'
+        | 'utf8'
+        | 'latin1'
         /** 接口调用失败的回调函数 */
         fail?: ReadZipEntryFailCallback
         /** 接口调用成功的回调函数 */
@@ -9921,13 +9937,13 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
          * - 'voice_communication': 同 mic，适用于实时沟通，仅限 Android;
          * - 'voice_recognition': 同 mic，适用于语音识别，仅限 Android; */
         audioSource?:
-            | 'auto'
-            | 'buildInMic'
-            | 'headsetMic'
-            | 'mic'
-            | 'camcorder'
-            | 'voice_communication'
-            | 'voice_recognition'
+        | 'auto'
+        | 'buildInMic'
+        | 'headsetMic'
+        | 'mic'
+        | 'camcorder'
+        | 'voice_communication'
+        | 'voice_recognition'
         /** 录音的时长，单位 ms，最大值 600000（10 分钟） */
         duration?: number
         /** 编码码率，有效值见下表格 */
@@ -9961,15 +9977,15 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
          * - 44100: 44100 采样率;
          * - 48000: 48000 采样率; */
         sampleRate?:
-            | 8000
-            | 11025
-            | 12000
-            | 16000
-            | 22050
-            | 24000
-            | 32000
-            | 44100
-            | 48000
+        | 8000
+        | 11025
+        | 12000
+        | 16000
+        | 22050
+        | 24000
+        | 32000
+        | 44100
+        | 48000
     }
     interface RedirectToOption {
         /** 需要跳转的应用内非 tabBar 的页面的路径 (代码包路径), 路径后可以带参数。参数与路径之间使用 `?` 分隔，参数键与参数值用 `=` 相连，不同参数用 `&` 分隔；如 'path?key=value&key2=value2' */
@@ -10133,7 +10149,7 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
      *
      * video 画到 2D Canvas 示例
      * [在微信开发者工具中查看示例](https://developers.weixin.qq.com/s/tJTak7mU7sfX) */
-    interface RenderingContext {}
+    interface RenderingContext { }
     interface RequestCommonPaymentFailCallbackErr {
         /** 错误信息 */
         errMsg: string
@@ -10149,10 +10165,10 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
          * - 'retail_pay_goods_new': 多渠道B2b支付;
          * - 'retail_pay_indirect_goods': 间接支付; */
         mode:
-            | 'retail_pay_goods'
-            | 'retail_pay_combined_goods'
-            | 'retail_pay_goods_new'
-            | 'retail_pay_indirect_goods'
+        | 'retail_pay_goods'
+        | 'retail_pay_combined_goods'
+        | 'retail_pay_goods_new'
+        | 'retail_pay_indirect_goods'
         /** 支付签名, 详见[《签名详解》](https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/industry/virtual-payment.html) */
         paySig: string
         /** 具体支付参数见signData, 该参数需以string形式传递, 例如signData: '{"mchid":"1234567890","out_trade_no":"test1244","description":"测试测试","amount":{"order_amount":1,"currency":"CNY"},"attach":"test_attach","env":1}' */
@@ -10270,9 +10286,9 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
     }
     interface RequestOption<
         T extends string | IAnyObject | ArrayBuffer =
-            | string
-            | IAnyObject
-            | ArrayBuffer
+        | string
+        | IAnyObject
+        | ArrayBuffer
     > {
         /** 开发者服务器接口地址 */
         url: string
@@ -10338,14 +10354,14 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
          * - 'TRACE': HTTP 请求 TRACE;
          * - 'CONNECT': HTTP 请求 CONNECT; */
         method?:
-            | 'OPTIONS'
-            | 'GET'
-            | 'HEAD'
-            | 'POST'
-            | 'PUT'
-            | 'DELETE'
-            | 'TRACE'
-            | 'CONNECT'
+        | 'OPTIONS'
+        | 'GET'
+        | 'HEAD'
+        | 'POST'
+        | 'PUT'
+        | 'DELETE'
+        | 'TRACE'
+        | 'CONNECT'
         /** 需要基础库： `3.2.2`
          *
          * 重定向拦截策略。（目前安卓、iOS、开发者工具已支持，PC端将在后续支持）
@@ -10580,9 +10596,9 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
     }
     interface RequestSuccessCallbackResult<
         T extends string | IAnyObject | ArrayBuffer =
-            | string
-            | IAnyObject
-            | ArrayBuffer
+        | string
+        | IAnyObject
+        | ArrayBuffer
     > {
         /** 需要基础库： `2.10.0`
          *
@@ -10859,25 +10875,25 @@ NFCAdapter.offDiscovered(listener) // 需传入与监听时同一个的函数对
          * - 'WX_CODE': 二维码;
          * - 'CODE_25': 一维码; */
         scanType:
-            | 'QR_CODE'
-            | 'AZTEC'
-            | 'CODABAR'
-            | 'CODE_39'
-            | 'CODE_93'
-            | 'CODE_128'
-            | 'DATA_MATRIX'
-            | 'EAN_8'
-            | 'EAN_13'
-            | 'ITF'
-            | 'MAXICODE'
-            | 'PDF_417'
-            | 'RSS_14'
-            | 'RSS_EXPANDED'
-            | 'UPC_A'
-            | 'UPC_E'
-            | 'UPC_EAN_EXTENSION'
-            | 'WX_CODE'
-            | 'CODE_25'
+        | 'QR_CODE'
+        | 'AZTEC'
+        | 'CODABAR'
+        | 'CODE_39'
+        | 'CODE_93'
+        | 'CODE_128'
+        | 'DATA_MATRIX'
+        | 'EAN_8'
+        | 'EAN_13'
+        | 'ITF'
+        | 'MAXICODE'
+        | 'PDF_417'
+        | 'RSS_14'
+        | 'RSS_EXPANDED'
+        | 'UPC_A'
+        | 'UPC_E'
+        | 'UPC_EAN_EXTENSION'
+        | 'WX_CODE'
+        | 'CODE_25'
         errMsg: string
     }
     /** 需要基础库： `3.1.0`
@@ -11749,10 +11765,10 @@ wx.createSelectorQuery()
          * - 'a-b test not enabled': 命中了 _We 分析_ 平台上的 AB 实验关闭的情况。详细可以查看 [Skyline 起步 > 配置 We 分析 AB 实验]((skyline/migration#%E9%85%8D%E7%BD%AE-We-%E5%88%86%E6%9E%90-AB-%E5%AE%9E%E9%AA%8C)) 一节;
          * - 'SwitchRender option set to webview': 本地调试的快捷切换入口被设置为了强制使用 Webview. 详情可以查看 [Skyline 起步 > 快捷切换入口](#) 一节; */
         reason?:
-            | 'client not supported'
-            | 'baselib not supported'
-            | 'a-b test not enabled'
-            | 'SwitchRender option set to webview'
+        | 'client not supported'
+        | 'baselib not supported'
+        | 'a-b test not enabled'
+        | 'SwitchRender option set to webview'
     }
     /** Snapshot 实例，可通过 [SelectorQuery](https://developers.weixin.qq.com/miniprogram/dev/api/wxml/SelectorQuery.html) 获取。
      *
@@ -12140,13 +12156,13 @@ wx.createSelectorQuery()
          * - 'step-start': 动画第一帧就跳至结束状态直到结束;
          * - 'step-end': 动画一直保持开始状态，最后一帧跳到结束状态; */
         timingFunction?:
-            | 'linear'
-            | 'ease'
-            | 'ease-in'
-            | 'ease-in-out'
-            | 'ease-out'
-            | 'step-start'
-            | 'step-end'
+        | 'linear'
+        | 'ease'
+        | 'ease-in'
+        | 'ease-in-out'
+        | 'ease-out'
+        | 'step-start'
+        | 'step-end'
         transformOrigin?: string
     }
     /** 贴纸类型 */
@@ -12183,28 +12199,28 @@ wx.createSelectorQuery()
          * - 111: 暂不支持（留空）;
          * - 112: 双手抱拳/恭喜发财; */
         active?:
-            | -1
-            | 10
-            | 11
-            | 12
-            | 13
-            | 14
-            | 15
-            | 16
-            | 17
-            | 100
-            | 101
-            | 102
-            | 103
-            | 104
-            | 105
-            | 106
-            | 107
-            | 108
-            | 109
-            | 110
-            | 111
-            | 112
+        | -1
+        | 10
+        | 11
+        | 12
+        | 13
+        | 14
+        | 15
+        | 16
+        | 17
+        | 100
+        | 101
+        | 102
+        | 103
+        | 104
+        | 105
+        | 106
+        | 107
+        | 108
+        | 109
+        | 110
+        | 111
+        | 112
         /** 贴纸ID */
         id?: string
         /** 贴纸资源 md5 */
@@ -13414,26 +13430,26 @@ session.run({
          * - 18: 无手势动作;
          * - -1: 无效手势; */
         gesture:
-            | 0
-            | 1
-            | 2
-            | 3
-            | 4
-            | 5
-            | 6
-            | 7
-            | 8
-            | 9
-            | 10
-            | 11
-            | 12
-            | 13
-            | 14
-            | 15
-            | 16
-            | 17
-            | 18
-            | -1
+        | 0
+        | 1
+        | 2
+        | 3
+        | 4
+        | 5
+        | 6
+        | 7
+        | 8
+        | 9
+        | 10
+        | 11
+        | 12
+        | 13
+        | 14
+        | 15
+        | 16
+        | 17
+        | 18
+        | -1
         /** 唯一标识 */
         id: number
         /** 相对视窗的位置信息，取值范围为 [0, 1]，0 为左/上边缘，1 为右/下边缘 */
@@ -14225,7 +14241,7 @@ audioCtx.close().then(() => {
      * ScriptProcessorNode
      * PannerNode
      * AnalyserNode */
-    interface WebAudioContextNode {}
+    interface WebAudioContextNode { }
     /** 提供预设的 Wi-Fi 信息列表 */
     interface WifiData {
         /** Wi-Fi 的 BSSID */
@@ -14586,11 +14602,11 @@ Easing.out(easing)
 * ```js
 Easing.inOut(easing)
 ``` */
-    interface WorkletEasing {}
+    interface WorkletEasing { }
     /** 需要基础库： `3.3.0`
      *
      * `ScrollView` 实例，可在 `worklet` 函数内操作 `scroll-view` 组件。 */
-    interface WorkletScrollViewContext {}
+    interface WorkletScrollViewContext { }
     interface WorkletScrollViewContextScrollToOption {
         /** 是否启用滚动动画 */
         animated?: boolean
@@ -14665,17 +14681,17 @@ Easing.inOut(easing)
          * - 'utf8': ;
          * - 'latin1': ; */
         encoding?:
-            | 'ascii'
-            | 'base64'
-            | 'binary'
-            | 'hex'
-            | 'ucs2'
-            | 'ucs-2'
-            | 'utf16le'
-            | 'utf-16le'
-            | 'utf-8'
-            | 'utf8'
-            | 'latin1'
+        | 'ascii'
+        | 'base64'
+        | 'binary'
+        | 'hex'
+        | 'ucs2'
+        | 'ucs-2'
+        | 'utf16le'
+        | 'utf-16le'
+        | 'utf-8'
+        | 'utf8'
+        | 'latin1'
         /** 接口调用失败的回调函数 */
         fail?: WriteFileFailCallback
         /** 接口调用成功的回调函数 */
@@ -14717,17 +14733,17 @@ Easing.inOut(easing)
          * - 'utf8': ;
          * - 'latin1': ; */
         encoding?:
-            | 'ascii'
-            | 'base64'
-            | 'binary'
-            | 'hex'
-            | 'ucs2'
-            | 'ucs-2'
-            | 'utf16le'
-            | 'utf-16le'
-            | 'utf-8'
-            | 'utf8'
-            | 'latin1'
+        | 'ascii'
+        | 'base64'
+        | 'binary'
+        | 'hex'
+        | 'ucs2'
+        | 'ucs-2'
+        | 'utf16le'
+        | 'utf-16le'
+        | 'utf-8'
+        | 'utf8'
+        | 'latin1'
         /** 接口调用失败的回调函数 */
         fail?: WriteFailCallback
         /** 只在 data 类型是 ArrayBuffer 时有效，指定要写入的字节数，默认为 ArrayBuffer 从0开始偏移 offset 个字节后剩余的字节数 */
@@ -14769,17 +14785,17 @@ Easing.inOut(easing)
          * - 'utf8': ;
          * - 'latin1': ; */
         encoding?:
-            | 'ascii'
-            | 'base64'
-            | 'binary'
-            | 'hex'
-            | 'ucs2'
-            | 'ucs-2'
-            | 'utf16le'
-            | 'utf-16le'
-            | 'utf-8'
-            | 'utf8'
-            | 'latin1'
+        | 'ascii'
+        | 'base64'
+        | 'binary'
+        | 'hex'
+        | 'ucs2'
+        | 'ucs-2'
+        | 'utf16le'
+        | 'utf-16le'
+        | 'utf-8'
+        | 'utf8'
+        | 'latin1'
         /** 只在 data 类型是 ArrayBuffer 时有效，指定要写入的字节数，默认为 ArrayBuffer 从0开始偏移 offset 个字节后剩余的字节数 */
         length?: number
         /** 只在 data 类型是 ArrayBuffer 时有效，决定 ArrayBuffer 中要被写入的部位，即 ArrayBuffer 中的索引，默认0 */
@@ -20139,9 +20155,9 @@ const slideRouteBuilder = (customRouteContext) => {
   const handlePrimaryAnimation = () => {
     'worklet'
     const transX = windowWidth * (1 - primaryAnimation.value)
-	   return {
-		   transform: `translateX(${transX}px)`,
-	   }
+       return {
+           transform: `translateX(${transX}px)`,
+       }
   }
   return {
     handlePrimaryAnimation
@@ -22485,9 +22501,9 @@ wx.request({
 ``` */
         request<
             T extends string | IAnyObject | ArrayBuffer =
-                | string
-                | IAnyObject
-                | ArrayBuffer
+            | string
+            | IAnyObject
+            | ArrayBuffer
         >(
             option: RequestOption<T>
         ): RequestTask
@@ -34159,9 +34175,9 @@ wx.writeBLECharacteristicValue({
     /** 接口调用成功的回调函数 */
     type RequestSuccessCallback<
         T extends string | IAnyObject | ArrayBuffer =
-            | string
-            | IAnyObject
-            | ArrayBuffer
+        | string
+        | IAnyObject
+        | ArrayBuffer
     > = (result: RequestSuccessCallbackResult<T>) => void
     /** onHeadersReceived 传入的监听函数。不传此参数则移除所有监听函数。 */
     type RequestTaskOffHeadersReceivedCallback = (
