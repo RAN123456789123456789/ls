@@ -55,6 +55,33 @@ page {
   border-radius: 3rpx 3rpx 0 0;
 }
 
+/* 筛选器样式 */
+.filter-bar {
+  display: flex;
+  background: #ffffff;
+  border-bottom: 1rpx solid #e5e5ea;
+  padding: 20rpx 30rpx;
+  gap: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.filter-item {
+  padding: 12rpx 24rpx;
+  border-radius: 20rpx;
+  font-size: 26rpx;
+  color: #666;
+  background: #f5f5f5;
+  transition: all 0.3s;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.filter-item.active {
+  background: #1a1a1a;
+  color: #ffffff;
+  font-weight: 500;
+}
+
 .request-list {
   flex: 1;
   padding: 24rpx 30rpx;
@@ -119,6 +146,40 @@ page {
   font-weight: 600;
   color: #333;
   flex: 1;
+  margin-right: 16rpx;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-shrink: 0;
+}
+
+/* 借阅类型标签样式 */
+.borrow-type-badge {
+  font-size: 24rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 借出 - 绿色 */
+.type-borrow {
+  color: #52c41a;
+}
+
+/* 复印 - 蓝色 */
+.type-copy {
+  color: #1890ff;
+}
+
+/* 参考 - 黄色 */
+.type-reference {
+  color: #faad14;
+}
+
+.type-default {
+  color: #999;
 }
 
 .status-badge {
@@ -164,8 +225,11 @@ page {
 
 .info-row {
   display: flex;
-  margin-bottom: 12rpx;
+  align-items: center;
+  margin-bottom: 8rpx;
   font-size: 26rpx;
+  line-height: 1.4;
+  min-height: 36rpx;
 }
 
 .info-row:last-child {
@@ -176,11 +240,17 @@ page {
   color: #999;
   width: 160rpx;
   flex-shrink: 0;
+  line-height: 1.4;
+  margin: 0;
+  padding: 0;
 }
 
 .info-value {
   color: #333;
   flex: 1;
+  line-height: 1.4;
+  margin: 0;
+  padding: 0;
 }
 
 .request-actions {

@@ -15,6 +15,7 @@ Page({
         filteredRequests: [] as BorrowRequestRecord[], // 筛选后的申请列表
         loading: false,
         currentTab: 'pending' as 'pending' | 'approved' | 'borrowed' | 'returned',
+        borrowTypeFilter: '', // 借阅类型筛选：''(全部)、'borrow'(借出)、'copy'(复印)、'reference'(参考)
         // 确认借出弹窗相关
         showBorrowModal: false,
         currentBorrowRequestId: '', // 当前要借出的申请ID
@@ -110,11 +111,13 @@ Page({
             const result = await getAllBorrowRequests();
 
             if (result.success && result.data) {
-                // 格式化日期时间
+                // 格式化日期时间，并添加类型文本和样式类
                 const formattedRequests = result.data.map((req: BorrowRequestRecord) => {
                     return {
                         ...req,
                         formattedCreatedAt: this.formatDate(req.createdAt),
+                        borrowTypeText: this.getBorrowTypeText(req.borrowType),
+                        borrowTypeClass: this.getBorrowTypeClass(req.borrowType),
                     };
                 });
 
@@ -126,13 +129,29 @@ Page({
                     returned: formattedRequests.filter(r => r.status === 'returned').length,
                     rejected: formattedRequests.filter(r => r.status === 'rejected').length,
                 });
+                // 调试：检查借阅类型数据
+                console.log('借阅类型分布:', {
+                    borrow: formattedRequests.filter(r => r.borrowType === 'borrow').length,
+                    copy: formattedRequests.filter(r => r.borrowType === 'copy').length,
+                    reference: formattedRequests.filter(r => r.borrowType === 'reference').length,
+                    empty: formattedRequests.filter(r => !r.borrowType).length,
+                });
+                // 打印前3条记录的详细信息
+                if (formattedRequests.length > 0) {
+                    console.log('前3条记录详情:', formattedRequests.slice(0, 3).map(r => ({
+                        id: r.id,
+                        bookName: r.bookName,
+                        borrowType: r.borrowType,
+                        status: r.status,
+                    })));
+                }
 
                 // 检查并发送逾期提醒
                 await this.checkAndSendOverdueReminders(formattedRequests);
 
-                // 同时设置筛选后的列表
-                const filtered = this.getFilteredRequestsFromData(formattedRequests, this.data.currentTab);
-                console.log(`当前标签页"${this.data.currentTab}"筛选后显示${filtered.length}条申请`);
+                // 同时设置筛选后的列表（根据标签页和类型筛选）
+                const filtered = this.getFilteredRequestsFromData(formattedRequests, this.data.currentTab, this.data.borrowTypeFilter);
+                console.log(`当前标签页"${this.data.currentTab}"，类型筛选"${this.data.borrowTypeFilter}"，筛选后显示${filtered.length}条申请`);
 
                 this.setData({
                     requests: formattedRequests,
@@ -168,8 +187,15 @@ Page({
     /**
      * 从数据中筛选申请列表（辅助函数）
      */
-    getFilteredRequestsFromData(requests: BorrowRequestRecord[], tab: string): BorrowRequestRecord[] {
-        return requests.filter(r => r.status === tab);
+    getFilteredRequestsFromData(requests: BorrowRequestRecord[], tab: string, borrowTypeFilter: string = ''): BorrowRequestRecord[] {
+        let filtered = requests.filter(r => r.status === tab);
+
+        // 如果是在"已归还"标签页且有类型筛选，进一步筛选
+        if (tab === 'returned' && borrowTypeFilter) {
+            filtered = filtered.filter(r => r.borrowType === borrowTypeFilter);
+        }
+
+        return filtered;
     },
 
     /**
@@ -207,12 +233,54 @@ Page({
      */
     switchTab(e: any) {
         const tab = e.currentTarget.dataset.tab;
-        const filtered = this.getFilteredRequestsFromData(this.data.requests, tab);
-        console.log(`切换到标签页"${tab}"，显示${filtered.length}条申请`);
+        // 切换标签页时，如果不是"已归还"标签页，重置类型筛选
+        const borrowTypeFilter = tab === 'returned' ? this.data.borrowTypeFilter : '';
+        const filtered = this.getFilteredRequestsFromData(this.data.requests, tab, borrowTypeFilter);
+        console.log(`切换到标签页"${tab}"，类型筛选"${borrowTypeFilter}"，显示${filtered.length}条申请`);
         this.setData({
             currentTab: tab,
+            borrowTypeFilter: borrowTypeFilter,
             filteredRequests: filtered,
         });
+    },
+
+    /**
+     * 切换类型筛选
+     */
+    onFilterChange(e: any) {
+        const filterType = e.currentTarget.dataset.type || '';
+        const filtered = this.getFilteredRequestsFromData(this.data.requests, this.data.currentTab, filterType);
+        console.log(`切换类型筛选为"${filterType}"，显示${filtered.length}条申请`);
+        this.setData({
+            borrowTypeFilter: filterType,
+            filteredRequests: filtered,
+        });
+    },
+
+    /**
+     * 获取借阅类型文本
+     */
+    getBorrowTypeText(borrowType?: string): string {
+        if (!borrowType) return '未设置';
+        const typeMap: { [key: string]: string } = {
+            'borrow': '借出',
+            'copy': '复印',
+            'reference': '参考',
+        };
+        return typeMap[borrowType] || '未知';
+    },
+
+    /**
+     * 获取借阅类型样式类
+     */
+    getBorrowTypeClass(borrowType?: string): string {
+        if (!borrowType) return 'type-default';
+        const classMap: { [key: string]: string } = {
+            'borrow': 'type-borrow', // 绿色
+            'copy': 'type-copy', // 蓝色
+            'reference': 'type-reference', // 黄色
+        };
+        return classMap[borrowType] || 'type-default';
     },
 
     /**

@@ -32,6 +32,38 @@
     </view>
   </view>
 
+  <!-- 筛选器（仅在已归还标签页显示） -->
+  <view class="filter-bar" wx:if="{{currentTab === 'returned'}}">
+    <view 
+      class="filter-item {{borrowTypeFilter === '' ? 'active' : ''}}"
+      bindtap="onFilterChange"
+      data-type=""
+    >
+      <text>全部</text>
+    </view>
+    <view 
+      class="filter-item {{borrowTypeFilter === 'borrow' ? 'active' : ''}}"
+      bindtap="onFilterChange"
+      data-type="borrow"
+    >
+      <text>借出</text>
+    </view>
+    <view 
+      class="filter-item {{borrowTypeFilter === 'copy' ? 'active' : ''}}"
+      bindtap="onFilterChange"
+      data-type="copy"
+    >
+      <text>复印</text>
+    </view>
+    <view 
+      class="filter-item {{borrowTypeFilter === 'reference' ? 'active' : ''}}"
+      bindtap="onFilterChange"
+      data-type="reference"
+    >
+      <text>参考</text>
+    </view>
+  </view>
+
   <!-- 申请列表 -->
   <scroll-view 
     class="request-list" 
@@ -54,10 +86,15 @@
       wx:key="id"
     >
       <view class="request-header">
-        <text class="book-name">{{item.bookName}}</text>
-        <text class="status-badge {{getStatusClass(item.status)}}">
-          {{getStatusText(item.status)}}
-        </text>
+        <text class="book-name">{{item.bookName || '未命名档案'}}</text>
+        <view class="header-right">
+          <text class="borrow-type-badge {{item.borrowTypeClass}}">
+            {{item.borrowTypeText}}
+          </text>
+          <text class="status-badge {{getStatusClass(item.status)}}">
+            {{getStatusText(item.status)}}
+          </text>
+        </view>
       </view>
 
       <view class="request-info">

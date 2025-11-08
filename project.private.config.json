@@ -19,5 +19,17 @@
     "bigPackageSizeSupport": false
   },
   "libVersion": "3.11.1",
-  "condition": {}
+  "condition": {
+    "miniprogram": {
+      "list": [
+        {
+          "name": "pages/adminReview/adminReview",
+          "pathName": "pages/adminReview/adminReview",
+          "query": "",
+          "scene": null,
+          "launchMode": "default"
+        }
+      ]
+    }
+  }
 }
