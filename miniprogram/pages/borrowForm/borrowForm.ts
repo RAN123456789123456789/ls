@@ -1,6 +1,6 @@
 // pages/borrowForm/borrowForm.ts
 import { submitBorrowRequest, BorrowRequestForm, BorrowType } from '../../utils/borrowRequestService';
-import { userLogin, isUserLoggedIn } from '../../utils/userService';
+import { userLogin, isUserLoggedIn, getUserFromDatabase } from '../../utils/userService';
 import { getBeijingTime, formatDate as formatDateUtil, getTodayBeijingDate } from '../../utils/util';
 import { requestSubscribeBeforeAction, SubscribeMessageType } from '../../utils/subscribeMessage';
 
@@ -149,7 +149,7 @@ Page({
     /**
      * 检查用户信息授权状态
      */
-    checkUserInfo() {
+    async checkUserInfo() {
         const userInfo = wx.getStorageSync('userInfo');
         if (userInfo) {
             this.setData({
@@ -157,6 +157,35 @@ Page({
                 userInfo: userInfo,
                 'form.name': userInfo.nickName || '',
             });
+        }
+
+        // 尝试从数据库获取用户信息，自动填充手机号
+        try {
+            const result = await getUserFromDatabase();
+            if (result.success && result.data) {
+                const userData = result.data;
+                // 如果用户已填写手机号，自动填充
+                if (userData.phoneNumber && !this.data.form.phone) {
+                    this.setData({
+                        'form.phone': userData.phoneNumber,
+                    });
+                }
+                // 如果用户已填写部门，自动填充
+                if (userData.department && !this.data.form.department) {
+                    this.setData({
+                        'form.department': userData.department,
+                    });
+                }
+                // 如果用户已填写邮箱，自动填充
+                if (userData.email && !this.data.form.email) {
+                    this.setData({
+                        'form.email': userData.email,
+                    });
+                }
+            }
+        } catch (error: any) {
+            // 获取用户信息失败不影响表单使用
+            console.warn('获取用户信息失败，无法自动填充:', error);
         }
     },
 

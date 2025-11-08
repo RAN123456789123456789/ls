@@ -128,6 +128,11 @@
           <text class="info-label">借阅事由：</text>
           <text class="info-value">{{item.reason}}</text>
         </view>
+        <!-- 可选字段：备注 -->
+        <view class="info-row" wx:if="{{item.remark}}">
+          <text class="info-label">备注：</text>
+          <text class="info-value">{{item.remark}}</text>
+        </view>
         <!-- 申请时间 -->
         <view class="info-row">
           <text class="info-label">申请时间：</text>
