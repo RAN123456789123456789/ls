@@ -1,13 +1,18 @@
 {
-  "name": "miniprogram-ts-quickstart",
+  "name": "miniprogram-book-borrow",
   "version": "1.0.0",
-  "description": "微信小程序图书借阅系统",
+  "description": "微信小程序图书借阅管理系统",
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": [],
+  "keywords": [
+    "miniprogram",
+    "wechat",
+    "book-borrow",
+    "library"
+  ],
   "author": "",
-  "license": "",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
     "axios": "^1.6.0",
